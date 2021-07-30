@@ -1,3 +1,1 @@
 # SpeedtestApplication
-
-Speedtest Application
