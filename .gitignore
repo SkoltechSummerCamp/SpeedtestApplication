@@ -27,7 +27,8 @@ hs_err_pid*
 # Gradle directory
 /.gradle/
 
-# Compiled native libs
+# Compiled native code
 /app/libs
+.cxx/
 
 local.properties

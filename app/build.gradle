@@ -29,6 +29,12 @@ android {
         jniLibs.srcDirs = ['libs']
     }
 
+    externalNativeBuild {
+        ndkBuild {
+            path "$projectDir/src/main/jni/Android.mk"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
