@@ -2,12 +2,8 @@ package com.company.test
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
 import com.company.test.databinding.ActivityMainBinding
-import java.io.File
-import java.io.FileInputStream
 import java.io.FileReader
-import java.io.InputStreamReader
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val fifoPath = "${applicationContext.filesDir.absolutePath}/helloPipe"
+        val fifoPath = "${applicationContext.filesDir.absolutePath}/iperfPipe"
         mkfifo(fifoPath)
         Thread { mainJni(fifoPath) }.also { it.start() }
 
@@ -40,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         init {
-            System.loadLibrary("hello_world")
+            System.loadLibrary("iperf2")
         }
     }
 }

@@ -14,6 +14,7 @@ android {
 
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    ndkVersion "19.2.5345600"
 
     defaultConfig {
         applicationId "com.company.test"
