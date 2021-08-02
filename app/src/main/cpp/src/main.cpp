@@ -280,28 +280,31 @@ Java_com_company_test_MainActivity_mkfifo(JNIEnv* env, jobject, jstring jPipePat
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_com_company_test_MainActivity_mainJni(JNIEnv* env, jobject, jstring jPipePath)
+Java_com_company_test_MainActivity_mainJni(JNIEnv* env, jobject, jstring jPipePath, jobjectArray args)
 {
     const char* pipePath = env->GetStringUTFChars(jPipePath, nullptr);
     const int pipeFd = open(pipePath, O_WRONLY);
+    env->ReleaseStringUTFChars(jPipePath, pipePath);
     dup2(pipeFd, STDOUT_FILENO);
     setbuf(stdout, nullptr);
     fflush(stdout);
 
-    char * argv1 = "iperf";
-    char * argv2 = "-o";
-    char * argv3 = const_cast<char *>(pipePath);
-    char * argv4 = "-s";
-    char ** argv = new char*[4];
-    argv[0] = argv1;
-    argv[1] = argv2;
-    argv[2] = argv3;
-    argv[3] = argv4;
-    main(4, argv);
-    fflush(stdout);
+    int argc = env->GetArrayLength(args) + 1;
+    char** argv = new char *[argc];
+    argv[0] = "iperf";
+    for (int i = 0; i < argc - 1; i++) {
+        auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
+        argv[i + 1] = (char*) env->GetStringUTFChars(jArg, nullptr);
+    }
+
+    main(argc, argv);
+
+    for (int i = 0; i < argc - 1; i++) {
+        auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
+        env->ReleaseStringUTFChars(jArg, argv[i + 1]);
+    }
 
     close(pipeFd);
-    env->ReleaseStringUTFChars(jPipePath, pipePath);
     return 0;
 }
 
