@@ -19,21 +19,21 @@
             android:padding="10dp">
 
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/deviceIpText"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="Device ip :" />
 
             <Button
-                android:id="@+id/button2"
+                android:id="@+id/refreshButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="refresh" />
 
             <Button
-                android:id="@+id/hide_button"
+                android:id="@+id/hideCollapseButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -41,14 +41,25 @@
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/sample_text"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="155dp"
-            android:editable="true"
-            android:padding="10dp"
-            android:scrollbars="vertical"
-            android:text="---------------------" />
+            android:layout_height="155dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/ipInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:editable="true"
+                    android:padding="10dp"
+                    android:scrollbars="vertical"
+                    android:text="---------------------" />
+            </LinearLayout>
+        </ScrollView>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -57,7 +68,7 @@
             android:padding="10dp">
 
             <TextView
-                android:id="@+id/textView3"
+                android:id="@+id/iPerfText"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight=".1"
@@ -88,23 +99,34 @@
                 android:layout_weight="0.85" />
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/startStopButton"
                 android:layout_width="wrap_content"
                 android:id="@+id/button3"
                 android:layout_width="103dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0.15"
-                android:text="exec" />
+                android:text="@string/startIperf" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/iperfOutput"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:editable="true"
-            android:padding="10dp"
-            android:scrollbars="vertical"
-            android:text="---------" />
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/iperfOutput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:editable="true"
+                    android:padding="10dp"
+                    android:scrollbars="vertical"
+                    android:text="---------" />
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

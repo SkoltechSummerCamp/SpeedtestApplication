@@ -1,6 +1,5 @@
 package com.company.test
 
-import android.view.View
 import java.io.FileReader
 import java.io.FileWriter
 
@@ -12,10 +11,10 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
     private val stderrPipePath = "$writableFolder/iperfStderr"
 
     init {
-        mainActivity.binding.button.setOnClickListener(::start)
+        mainActivity.binding.startStopButton.setOnClickListener { start() }
     }
 
-    private fun start(view: View) {
+    private fun start() {
         mkfifo(stdoutPipePath)
         mkfifo(stderrPipePath)
 
@@ -42,11 +41,11 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
             }, name).also { it.start() }
         }
         mainActivity.binding.iperfArgs.isEnabled = false
-        mainActivity.binding.button.text = mainActivity.applicationContext.getString(R.string.stopIperf)
-        mainActivity.binding.button.setOnClickListener(::stop)
+        mainActivity.binding.startStopButton.text = mainActivity.applicationContext.getString(R.string.stopIperf)
+        mainActivity.binding.startStopButton.setOnClickListener { stop() }
     }
 
-    private fun stop(view: View) {
+    private fun stop() {
         stopJni()
         iperfThread!!.interrupt()
         iperfThread!!.join()
@@ -60,12 +59,12 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
 
         // TODO uncomment
 //        mainActivity.binding.iperfOutput.text = ""
-        mainActivity.binding.button.text = mainActivity.applicationContext.getString(R.string.startIperf)
+        mainActivity.binding.startStopButton.text = mainActivity.applicationContext.getString(R.string.startIperf)
         mainActivity.binding.iperfArgs.isEnabled = true
         iperfThread = null
         inputHandlerThreads = null
         mainActivity.binding.iperfArgs.text.clear()
-        mainActivity.binding.button.setOnClickListener(::start)
+        mainActivity.binding.startStopButton.setOnClickListener { start() }
     }
 
     private fun parseIperfArgs(args: String): Array<String> {
