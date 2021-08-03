@@ -9,32 +9,89 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="170dp"
-            android:orientation="horizontal">
+            android:layout_height="66dp"
+            android:orientation="horizontal"
+            android:padding="10dp">
 
-            <EditText
-                android:id="@+id/iperfArgs"
+            <TextView
+                android:id="@+id/textView"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Device ip :" />
 
             <Button
-                android:id="@+id/button"
-                android:layout_width="134dp"
+                android:id="@+id/button2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="взлетаем" />
+                android:layout_weight="1"
+                android:text="refresh" />
+
         </LinearLayout>
 
         <TextView
-            android:id="@+id/iperfOutput"
+            android:id="@+id/sample_text"
             android:layout_width="match_parent"
-            android:layout_height="643dp"
+            android:layout_height="155dp"
+            android:editable="true"
+            android:padding="10dp"
             android:text="---------------------" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="iPerf"
+                android:textAlignment="center"
+                android:textIsSelectable="false" />
+
+            <EditText
+                android:id="@+id/iperfArgs"
+                android:layout_width="338dp"
+                android:layout_height="match_parent"
+                android:editable="true"
+                android:ems="10"
+                android:inputType="textPersonName" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/button3"
+                android:layout_width="103dp"
+                android:layout_height="match_parent"
+                android:text="exec" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:editable="true"
+            android:padding="10dp"
+            android:text="---------" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
