@@ -2,6 +2,7 @@ package com.company.test
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import com.company.test.databinding.ActivityMainBinding
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -14,7 +15,8 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        binding.iperfOutput.movementMethod = ScrollingMovementMethod()
+        binding.sampleText.movementMethod = ScrollingMovementMethod()
         binding.button2.setOnClickListener { refreshAddresses() }
         refreshAddresses()
         IperfRunner(applicationContext.filesDir.absolutePath, this)

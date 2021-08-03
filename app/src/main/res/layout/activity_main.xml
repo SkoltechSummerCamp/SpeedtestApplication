@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
+    android:background="#FFFFFF"
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,6 +32,13 @@
                 android:layout_weight="1"
                 android:text="refresh" />
 
+            <Button
+                android:id="@+id/hide_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="hide" />
+
         </LinearLayout>
 
         <TextView
@@ -40,6 +47,7 @@
             android:layout_height="155dp"
             android:editable="true"
             android:padding="10dp"
+            android:scrollbars="vertical"
             android:text="---------------------" />
 
         <LinearLayout
@@ -50,17 +58,18 @@
 
             <TextView
                 android:id="@+id/textView3"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight=".1"
+                android:contextClickable="false"
                 android:text="iPerf"
-                android:textAlignment="center"
-                android:textIsSelectable="false" />
+                android:textAlignment="center" />
 
             <EditText
                 android:id="@+id/iperfArgs"
-                android:layout_width="338dp"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_weight=".9"
                 android:editable="true"
                 android:ems="10"
                 android:inputType="textPersonName" />
@@ -74,23 +83,27 @@
             android:padding="10dp">
 
             <Space
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1" />
+                android:layout_weight="0.85" />
 
             <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
                 android:id="@+id/button3"
                 android:layout_width="103dp"
                 android:layout_height="match_parent"
+                android:layout_weight="0.15"
                 android:text="exec" />
         </LinearLayout>
 
         <TextView
-            android:id="@+id/textView4"
+            android:id="@+id/iperfOutput"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:editable="true"
             android:padding="10dp"
+            android:scrollbars="vertical"
             android:text="---------" />
 
     </LinearLayout>
