@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Sandbox</string>
+    <string name="startIperf">start</string>
+    <string name="stopIperf">stop</string>
 </resources>
