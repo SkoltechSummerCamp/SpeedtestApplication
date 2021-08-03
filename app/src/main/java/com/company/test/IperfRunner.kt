@@ -20,7 +20,6 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
         mkfifo(stderrPipePath)
 
         val argsArray = parseIperfArgs(mainActivity.binding.iperfArgs.text.toString())
-        println(argsArray.contentToString())
         iperfThread = Thread({
             mainJni(stdoutPipePath, stderrPipePath, argsArray)
         }, "Iperf Thread").also { it.start() }
@@ -70,7 +69,7 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
     }
 
     private fun parseIperfArgs(args: String): Array<String> {
-        return args.split(Regex("\\s+")).toTypedArray()
+        return args.split(Regex("\\s+")).filter { it.isNotBlank() }.toTypedArray()
     }
 
     private external fun mkfifo(pipePath: String)

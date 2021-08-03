@@ -445,7 +445,7 @@ Java_com_company_test_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath
 extern "C" JNIEXPORT void JNICALL
 Java_com_company_test_IperfRunner_stopJni(JNIEnv* env, jobject)
 {
-    Sig_Interupt(SIGSEGV);
+    Sig_Interupt(SIGINT);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -461,8 +461,8 @@ int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
     env->ReleaseStringUTFChars(jPipePath, pipePath);
 
     dup2(pipeFd, fileno(file));
-    setbuf(stdout, nullptr);
-    fflush(stdout);
+    setbuf(file, nullptr);
+    fflush(file);
     return pipeFd;
 }
 
