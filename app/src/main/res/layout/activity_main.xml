@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-    android:background="#FFFFFF"
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -23,21 +22,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Device ip :" />
+                android:text="@string/deviceIp"/>
 
             <Button
                 android:id="@+id/refreshButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="refresh" />
+                android:text="@string/refreshIp" />
 
             <Button
                 android:id="@+id/hideCollapseButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="hide" />
+                android:text="@string/hideIp" />
 
         </LinearLayout>
 
@@ -54,35 +53,32 @@
                     android:id="@+id/ipInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:editable="true"
                     android:padding="10dp"
-                    android:scrollbars="vertical"
-                    android:text="---------------------" />
+                    android:scrollbars="vertical"/>
             </LinearLayout>
         </ScrollView>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="75dp"
             android:orientation="horizontal"
             android:padding="10dp">
 
-            <TextView
-                android:id="@+id/iPerfText"
+            <Spinner
+                android:id="@+id/spinner"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight=".1"
-                android:contextClickable="false"
-                android:text="iPerf"
-                android:textAlignment="center" />
+                android:layout_weight=".5" />
+
 
             <EditText
                 android:id="@+id/iperfArgs"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight=".9"
-                android:editable="true"
+                android:layout_weight=".5"
                 android:ems="10"
+                android:importantForAutofill="no"
+
                 android:inputType="textPersonName" />
 
         </LinearLayout>
@@ -110,21 +106,19 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="406dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" >
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/iperfOutput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:editable="true"
                     android:padding="10dp"
-                    android:scrollbars="vertical"
-                    android:text="---------" />
+                    android:scrollbars="vertical" />
             </LinearLayout>
         </ScrollView>
 
