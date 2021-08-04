@@ -1458,6 +1458,12 @@ void PrintMSS( ReporterData *stats ) {
 }
 // end ReportMSS
 
+void reporter_reinitialize_global() {
+    // TODO memory leak ???
+    ReportRoot = NULL;
+    num_multi_slots = 0;
+}
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
