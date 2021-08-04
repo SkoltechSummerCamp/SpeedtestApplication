@@ -706,10 +706,12 @@ void reporter_spawn( thread_Settings *thread ) {
         Condition_Lock ( ReportCond );
         if ( ReportRoot == NULL ) {
             // Allow main thread to exit if Ctrl-C is received
-            thread_setignore();
+            // Commented for ability to stop iperf programmatically
+            // thread_setignore();
             Condition_Wait ( &ReportCond );
             // Stop main thread from exiting until done with all reports
-            thread_unsetignore();
+            // Commented for ability to stop iperf programmatically
+            // thread_unsetignore();
         }
         Condition_Unlock ( ReportCond );
 
@@ -802,7 +804,9 @@ again:
 #endif
 	    }
         }
-    } while ( 1 );
+    } while ( sInterupted == 0 );
+    // TODO memory leak?
+//    Settings_Destroy( thread );
 }
 
 /*
