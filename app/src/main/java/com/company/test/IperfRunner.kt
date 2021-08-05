@@ -3,49 +3,47 @@ package com.company.test
 import java.io.FileReader
 import java.io.FileWriter
 
-class IperfRunner(writableFolder: String, private val mainActivity: MainActivity) {
+class IperfRunner(writableFolder: String) {
     private var iperfThread: Thread? = null
     private var inputHandlerThreads: List<Thread>? = null
 
     private val stdoutPipePath = "$writableFolder/iperfStdout"
     private val stderrPipePath = "$writableFolder/iperfStderr"
 
-    init {
-        mainActivity.binding.startStopButton.setOnClickListener { start() }
-    }
+    var stdoutHandler: (String) -> Unit = {}
+    var stderrHandler: (String) -> Unit = {}
 
-    private fun start() {
+    fun start(args: String) {
         mkfifo(stdoutPipePath)
         mkfifo(stderrPipePath)
 
-        val argsArray = parseIperfArgs(mainActivity.binding.iperfArgs.text.toString())
+        val argsArray = parseIperfArgs(args)
         iperfThread = Thread({
             mainJni(stdoutPipePath, stderrPipePath, argsArray)
         }, "Iperf Thread").also { it.start() }
 
         inputHandlerThreads = listOf(
-            stdoutPipePath to "Stdout Handler",
-            stderrPipePath to "Stderr Handler"
-        ).map { (pipePath, name) ->
+            Triple(stdoutPipePath, "Stdout Handler", stdoutHandler),
+            Triple(stderrPipePath, "Stderr Handler", stderrHandler)
+        ).map { (pipePath, name, handler) ->
             Thread({
                 FileReader(pipePath).buffered().useLines { lines ->
                     lines.forEach {
                         if (it == CLOSE_PIPE) {
                             return@useLines
                         }
-                        mainActivity.runOnUiThread {
-                            mainActivity.binding.iperfOutput.append(it + System.lineSeparator())
-                        }
+                        handler(it + System.lineSeparator())
                     }
                 }
             }, name).also { it.start() }
         }
-        mainActivity.binding.iperfArgs.isEnabled = false
-        mainActivity.binding.startStopButton.text = mainActivity.applicationContext.getString(R.string.stopIperf)
-        mainActivity.binding.startStopButton.setOnClickListener { stop() }
     }
 
-    private fun stop() {
+    private fun parseIperfArgs(args: String): Array<String> {
+        return args.split(Regex("\\s+")).filter { it.isNotBlank() }.toTypedArray()
+    }
+
+    fun stop() {
         stopJni()
         iperfThread!!.interrupt()
         iperfThread!!.join()
@@ -57,18 +55,8 @@ class IperfRunner(writableFolder: String, private val mainActivity: MainActivity
         }
         inputHandlerThreads!!.forEach { it.join() }
 
-        // TODO uncomment
-//        mainActivity.binding.iperfOutput.text = ""
-        mainActivity.binding.startStopButton.text = mainActivity.applicationContext.getString(R.string.startIperf)
-        mainActivity.binding.iperfArgs.isEnabled = true
         iperfThread = null
         inputHandlerThreads = null
-        mainActivity.binding.iperfArgs.text.clear()
-        mainActivity.binding.startStopButton.setOnClickListener { start() }
-    }
-
-    private fun parseIperfArgs(args: String): Array<String> {
-        return args.split(Regex("\\s+")).filter { it.isNotBlank() }.toTypedArray()
     }
 
     private external fun mkfifo(pipePath: String)

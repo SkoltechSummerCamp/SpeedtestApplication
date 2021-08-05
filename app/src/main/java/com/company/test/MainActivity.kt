@@ -3,31 +3,37 @@ package com.company.test
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import com.company.test.databinding.ActivityMainBinding
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
+    lateinit var iperfRunner: IperfRunner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val spinner = binding.spinner
+
         ArrayAdapter.createFromResource(
             this,
             R.array.commands,
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapter
+            binding.spinner.adapter = adapter
         }
+
         binding.refreshButton.setOnClickListener { refreshAddresses() }
         refreshAddresses()
-        IperfRunner(applicationContext.filesDir.absolutePath, this)
+
+        iperfRunner = IperfRunner(applicationContext.filesDir.absolutePath).also {
+            it.stdoutHandler = ::handleIperfOutput
+            it.stderrHandler = ::handleIperfOutput
+        }
+        binding.startStopButton.setOnClickListener { startIperf() }
     }
 
     private fun refreshAddresses() {
@@ -40,5 +46,27 @@ class MainActivity : AppCompatActivity() {
                     .joinToString(separator = ", ")
                 "${networkInterface.displayName}: $addresses"
             }
+    }
+
+    private fun handleIperfOutput(text: String) {
+        runOnUiThread {
+            binding.iperfOutput.append(text)
+        }
+    }
+
+    private fun startIperf() {
+        iperfRunner.start(binding.iperfArgs.text.toString())
+
+        binding.iperfArgs.isEnabled = false
+        binding.startStopButton.text = applicationContext.getString(R.string.stopIperf)
+        binding.startStopButton.setOnClickListener { stopIperf() }
+    }
+
+    private fun stopIperf() {
+        iperfRunner.stop()
+
+        binding.iperfArgs.isEnabled = true
+        binding.startStopButton.text = applicationContext.getString(R.string.startIperf)
+        binding.startStopButton.setOnClickListener { startIperf() }
     }
 }
