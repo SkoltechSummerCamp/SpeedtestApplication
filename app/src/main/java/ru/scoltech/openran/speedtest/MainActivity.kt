@@ -4,13 +4,17 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
+import kotlinx.coroutines.*
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var iperfRunner: IperfRunner
+    var isPingInChecking = false
 
+    @Volatile
+    var pingValueBuffer = "---"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -34,7 +38,34 @@ class MainActivity : AppCompatActivity() {
             it.stderrHandler = ::handleIperfOutput
         }
         binding.startStopButton.setOnClickListener { startIperf() }
+        binding.pingTestButt.setOnClickListener {
+            pingTestButtonAction()
+        }
     }
+
+    private fun pingTestButtonAction() = runBlocking {
+        if (!isPingInChecking) {
+            isPingInChecking = true
+            binding.pingTestButt.text = "TESTING..."
+            CoroutineScope(Dispatchers.IO).launch {
+                doPingTest(
+                    { value: String -> pingValueBuffer = value },
+                    binding.serverIP.text.toString()
+                )
+                isPingInChecking = false
+            }
+            CoroutineScope(Dispatchers.Main).launch {
+                do {
+                    delay(1)
+                    binding.pingValue.text = pingValueBuffer
+                } while (isPingInChecking)
+                if (binding.pingValue.text != pingValueBuffer)
+                    binding.pingValue.text = pingValueBuffer
+                binding.pingTestButt.text = "TEST PING"
+            }
+        }
+    }
+
 
     private fun refreshAddresses() {
         binding.ipInfo.text = NetworkInterface.getNetworkInterfaces()
