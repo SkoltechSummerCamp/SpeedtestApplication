@@ -1,6 +1,5 @@
 package ru.scoltech.openran.speedtest
 
-import android.util.Log
 import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -9,7 +8,6 @@ import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentLinkedDeque
 
 class ICMPPing {
-    //private val stopFlag: AtomicBoolean = AtomicBoolean(false)
     private val currentProcess: Process = ProcessBuilder("sh").redirectErrorStream(true).start()
 
     suspend fun performPingWithArgs(args: String, linesDeque: ConcurrentLinkedDeque<String>) {
@@ -20,12 +18,10 @@ class ICMPPing {
         var line: String?
         try {
             while (reader.readLine().also { line = it } != null) {
-                line.let { Log.d("", it.toString()) }
                 linesDeque.addLast(line)
                 delay(10)
             }
         } catch (e: IOException) {
-            Log.d("", "was interrupted")
         }
     }
 
@@ -37,19 +33,16 @@ class ICMPPing {
         var line: String?
         try {
             while (reader.readLine().also { line = it } != null) {
-                line.let { Log.d("", it.toString()) }
                 line!!.split(" ").forEach {
                     if (it.contains("time="))
                         currValueGetter(it.split("=")[1])
                 }
             }
         } catch (e: IOException) {
-            Log.d("", "was interrupted")
         }
     }
 
     fun stopExecuting() {
-        Log.d("", "STOP EXECUTING")
         currentProcess.destroy()
     }
 }

@@ -3,7 +3,6 @@ package ru.scoltech.openran.speedtest
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
-import android.util.Log
 import android.widget.ArrayAdapter
 import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
@@ -119,7 +118,6 @@ class MainActivity : AppCompatActivity() {
     private fun startICMPPing() = runBlocking {
         if (!isPingICMPInChecking.get()) {
             val pinger = ICMPPing()
-            Log.d("", "ICMP ping has been ran")
             isPingICMPInChecking.set(true)
             val host = binding.serverIP.text.toString()
             val stringDeque: ConcurrentLinkedDeque<String> = ConcurrentLinkedDeque()
@@ -127,7 +125,6 @@ class MainActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 pinger.performPingWithArgs(host, stringDeque)
                 isPingICMPInChecking.set(false)
-                Log.d("", "DONE!")
             }
 
             CoroutineScope(Dispatchers.Main).launch {
@@ -144,7 +141,6 @@ class MainActivity : AppCompatActivity() {
                 binding.checkIcmpPingButt.text = getString(R.string.performAsCommand)
             }
         } else {
-            Log.d("PERFORM AS COMMAND", "STOP")
             stopPingFlag.set(true)
         }
     }
@@ -159,7 +155,6 @@ class MainActivity : AppCompatActivity() {
                 pinger.justPingByHost(
                     binding.serverIP.text.toString()
                 ) { value: String -> pingValueBuffer = value }
-                Log.d("", "DONE!")
                 justICMPPingInChecking.set(false)
             }
             CoroutineScope(Dispatchers.Main).launch {
