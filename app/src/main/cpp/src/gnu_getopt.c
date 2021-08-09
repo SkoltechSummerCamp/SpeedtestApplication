@@ -743,19 +743,6 @@ gnu_getopt ( int argc,
                                  0);
 }
 
-// TODO memory leaks ???
-void gnu_getopt_reinitialize_global() {
-    gnu_optarg = NULL;
-    gnu_optind = 1;
-    __gnu_getopt_initialized = 0;
-    nextchar = NULL;
-    gnu_opterr = 1;
-    gnu_optopt = '?';
-    posixly_correct = NULL;
-    first_nonopt = 0;
-    last_nonopt = 0;
-}
-
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

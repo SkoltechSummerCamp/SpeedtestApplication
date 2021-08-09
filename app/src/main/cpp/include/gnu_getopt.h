@@ -129,8 +129,6 @@ int _gnu_getopt_internal( int argc,
                           int *longind,
                           int long_only );
 
-void gnu_getopt_reinitialize_global();
-
 #ifdef	__cplusplus
 } /* end extern "C" */
     #endif

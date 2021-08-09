@@ -340,8 +340,6 @@ void ReportSettings( struct thread_Settings *agent );
 void ReportConnections( struct thread_Settings *agent );
 void reporter_peerversion (struct thread_Settings *inSettings, int upper, int lower);
 
-void reporter_reinitialize_global();
-
 extern report_connection connection_reports[];
 
 extern report_settings settings_reports[];

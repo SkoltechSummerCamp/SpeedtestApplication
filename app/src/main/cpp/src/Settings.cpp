@@ -1218,18 +1218,3 @@ int Settings_GenerateClientHdr( thread_Settings *client, client_hdr *hdr ) {
     }
     return (flags);
 }
-
-void settings_reinitialize_global() {
-    reversetest = 0;
-    udphistogram = 0;
-    l2checks = 0;
-    incrdstip = 0;
-    txstarttime = 0;
-    fqrate = 0;
-    triptime = 0;
-#ifdef HAVE_ISOCHRONOUS
-    burstipg = 0;
-    burstipg_set = 0;
-    isochronous = 0;
-#endif
-}

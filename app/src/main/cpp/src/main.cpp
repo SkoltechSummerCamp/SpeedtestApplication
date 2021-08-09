@@ -76,7 +76,6 @@
 #include <unistd.h>
 #include <cstdio>
 #include <sys/stat.h>
-#include <gnu_getopt.h>
 
 #ifdef WIN32
 #include "service.h"
@@ -453,18 +452,6 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_company_test_IperfRunner_cleanupJni(JNIEnv* env, jobject)
 {
     cleanup();
-
-    sInterupted = 0;
-    groupID = 0;
-    Mutex_Destroy(&groupCond);
-    Condition_Destroy(&ReportCond);
-    Condition_Destroy(&ReportDoneCond);
-
-    Mutex_Destroy(&clients_mutex);
-
-    gnu_getopt_reinitialize_global();
-    settings_reinitialize_global();
-    reporter_reinitialize_global();
 }
 
 int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)

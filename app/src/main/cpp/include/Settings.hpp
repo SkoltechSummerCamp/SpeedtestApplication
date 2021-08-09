@@ -703,8 +703,6 @@ void Settings_GenerateClientSettings( thread_Settings *server,
 // generate client header for server
 int Settings_GenerateClientHdr( thread_Settings *client, client_hdr *hdr );
 
-void settings_reinitialize_global();
-
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
