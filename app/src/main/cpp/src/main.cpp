@@ -104,7 +104,6 @@ extern "C" {
     // serialize modification of the report list
     Condition ReportCond;
     Condition ReportDoneCond;
-    thread_Settings* socketThreadSettings = nullptr;
 }
 
 // global variables only accessed within this file
@@ -165,17 +164,17 @@ int main( int argc, char **argv ) {
     atexit( cleanup );
 
     // Allocate the "global" settings
-    socketThreadSettings = new thread_Settings;
+    thread_Settings* ext_gSettings = new thread_Settings;
 
     // Initialize settings to defaults
-    Settings_Initialize( socketThreadSettings );
+    Settings_Initialize( ext_gSettings );
     // read settings from environment variables
-    Settings_ParseEnvironment( socketThreadSettings );
+    Settings_ParseEnvironment( ext_gSettings );
     // read settings from command-line parameters
-    Settings_ParseCommandLine( argc, argv, socketThreadSettings );
+    Settings_ParseCommandLine( argc, argv, ext_gSettings );
 
     // Check for either having specified client or server
-    if ((socketThreadSettings->mThreadMode != kMode_Client) && (socketThreadSettings->mThreadMode != kMode_Listener)) {
+    if ((ext_gSettings->mThreadMode != kMode_Client) && (ext_gSettings->mThreadMode != kMode_Listener)) {
         // neither server nor client mode was specified
         // print usage and exit
 
@@ -199,20 +198,20 @@ int main( int argc, char **argv ) {
     }
 
 
-    switch (socketThreadSettings->mThreadMode) {
+    switch (ext_gSettings->mThreadMode) {
     case kMode_Client :
-	if ( isDaemon( socketThreadSettings ) ) {
+	if ( isDaemon( ext_gSettings ) ) {
 	    fprintf(stderr, "Iperf client cannot be run as a daemon\n");
 	    return 0;
 	}
         // initialize client(s)
-        client_init( socketThreadSettings );
+        client_init( ext_gSettings );
 #ifdef HAVE_CLOCK_NANOSLEEP
 #ifdef HAVE_CLOCK_GETTIME
-	if (isEnhanced(socketThreadSettings) && isTxStartTime(socketThreadSettings)) {
+	if (isEnhanced(ext_gSettings) && isTxStartTime(ext_gSettings)) {
 	    struct timespec t1;
 	    clock_gettime(CLOCK_REALTIME, &t1);
-	    fprintf(stdout, "Client thread(s) traffic start time %ld.%.9ld current time is %ld.%.9ld (epoch/unix format)\n",socketThreadSettings->txstart.tv_sec, socketThreadSettings->txstart.tv_nsec, t1.tv_sec, t1.tv_nsec);
+	    fprintf(stdout, "Client thread(s) traffic start time %ld.%.9ld current time is %ld.%.9ld (epoch/unix format)\n",ext_gSettings->txstart.tv_sec, ext_gSettings->txstart.tv_nsec, t1.tv_sec, t1.tv_nsec);
 	}
 #endif
 #endif
@@ -220,19 +219,19 @@ int main( int argc, char **argv ) {
     case kMode_Listener :
 #ifdef WIN32
      // Remove the Windows service if requested
-	if ( isRemoveService( socketThreadSettings ) ) {
+	if ( isRemoveService( ext_gSettings ) ) {
 	    // remove the service
 	    if ( CmdRemoveService() ) {
 		fprintf(stderr, "IPerf Service is removed.\n");
 	    }
 	}
-	if ( isDaemon( socketThreadSettings ) ) {
+	if ( isDaemon( ext_gSettings ) ) {
 	    CmdInstallService(argc, argv);
-	} else if (isRemoveService(socketThreadSettings)) {
+	} else if (isRemoveService(ext_gSettings)) {
 	    return 0;
 	}
 #else // *nix system
-	if ( isDaemon( socketThreadSettings ) ) {
+	if ( isDaemon( ext_gSettings ) ) {
 	    fprintf( stderr, "Running Iperf Server as a daemon\n");
 	    // Start the server as a daemon
 	    fflush(stderr);
@@ -252,18 +251,18 @@ int main( int argc, char **argv ) {
     {
 	thread_Settings *into = NULL;
 	// Create the settings structure for the reporter thread
-	Settings_Copy( socketThreadSettings, &into );
+	Settings_Copy( ext_gSettings, &into );
 	into->mThreadMode = kMode_Reporter;
 
 	// Have the reporter launch the client or listener
-	into->runNow = socketThreadSettings;
+	into->runNow = ext_gSettings;
 
 	// Start all the threads that are ready to go
 	thread_start( into );
     }
 #else
     // No need to make a reporter thread because we don't have threads
-    thread_start( socketThreadSettings );
+    thread_start( ext_gSettings );
 #endif
 
     // wait for other (client, server) threads to complete
@@ -447,24 +446,7 @@ Java_com_company_test_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath
 extern "C" JNIEXPORT void JNICALL
 Java_com_company_test_IperfRunner_stopJni(JNIEnv* env, jobject)
 {
-    sInterupted = SIGINT;
-
-    // Closing reporter thread
-    Condition_Lock(ReportCond);
-    Condition_Signal(&ReportCond);
-    Condition_Unlock(ReportCond);
-
-    auto socket = socketThreadSettings->mSock;
-    if (socket != INVALID_SOCKET) {
-        // Closing client or listener socket --> closing client or listener thread
-        // TODO multithreading synchronization
-        // TODO close all Server sockets
-
-        const int errorCode = close(socket);
-        WARN_errno(errorCode, "socket close on jni stopping");
-        socketThreadSettings->mSock = INVALID_SOCKET;
-        pthread_kill(socketThreadSettings->mTID, SIGALRM);
-    }
+    Sig_Interupt(SIGINT);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -477,8 +459,6 @@ Java_com_company_test_IperfRunner_cleanupJni(JNIEnv* env, jobject)
     Mutex_Destroy(&groupCond);
     Condition_Destroy(&ReportCond);
     Condition_Destroy(&ReportDoneCond);
-    // TODO delete[] socketThreadSettings ???
-    socketThreadSettings = nullptr;
 
     Mutex_Destroy(&clients_mutex);
 
