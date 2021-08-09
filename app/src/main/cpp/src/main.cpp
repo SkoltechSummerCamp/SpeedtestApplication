@@ -76,6 +76,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #ifdef WIN32
 #include "service.h"
@@ -103,6 +104,7 @@ extern "C" {
     // serialize modification of the report list
     Condition ReportCond;
     Condition ReportDoneCond;
+    pid_t iperfPid;
 }
 
 // global variables only accessed within this file
@@ -443,15 +445,16 @@ Java_com_company_test_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_company_test_IperfRunner_stopJni(JNIEnv* env, jobject)
+Java_com_company_test_IperfRunner_exitJni(JNIEnv* env, jobject)
 {
-    Sig_Interupt(SIGINT);
+    kill(iperfPid, SIGINT);
+    waitpid(iperfPid, nullptr, 0);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_company_test_IperfRunner_cleanupJni(JNIEnv* env, jobject)
+Java_com_company_test_IperfRunner_sendForceExitJni(JNIEnv* env, jobject)
 {
-    cleanup();
+    kill(iperfPid, SIGINT);
 }
 
 int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
@@ -467,27 +470,38 @@ int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_com_company_test_IperfRunner_mainJni(JNIEnv* env, jobject, jstring jStdoutPipePath, jstring jStderrPipePath, jobjectArray args)
+Java_com_company_test_IperfRunner_startJni(JNIEnv* env, jobject, jstring jStdoutPipePath, jstring jStderrPipePath, jobjectArray args)
 {
-    int stdoutPipeFd = redirectFileToPipe(env, jStdoutPipePath, stdout);
-    int stderrPipeFd = redirectFileToPipe(env, jStderrPipePath, stderr);
+    int stdoutPipeFd;
+    int stderrPipeFd;
+    int argc;
+    char** argv;
 
-    int argc = env->GetArrayLength(args) + 1;
-    char** argv = new char *[argc];
-    argv[0] = "iperf";
-    for (int i = 0; i < argc - 1; i++) {
-        auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
-        argv[i + 1] = (char*) env->GetStringUTFChars(jArg, nullptr);
+    iperfPid = fork();
+    if (iperfPid == -1) {
+        return -1;
+    } else if (iperfPid == 0) {
+        stdoutPipeFd = redirectFileToPipe(env, jStdoutPipePath, stdout);
+        stderrPipeFd = redirectFileToPipe(env, jStderrPipePath, stderr);
+
+        argc = env->GetArrayLength(args) + 1;
+        argv = new char *[argc];
+        argv[0] = "iperf";
+        for (int i = 0; i < argc - 1; i++) {
+            auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
+            argv[i + 1] = (char*) env->GetStringUTFChars(jArg, nullptr);
+        }
+
+        main(argc, argv);
+
+        for (int i = 0; i < argc - 1; i++) {
+            auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
+            env->ReleaseStringUTFChars(jArg, argv[i + 1]);
+        }
+
+        close(stderrPipeFd);
+        close(stdoutPipeFd);
+        exit(0);
     }
-
-    main(argc, argv);
-
-    for (int i = 0; i < argc - 1; i++) {
-        auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
-        env->ReleaseStringUTFChars(jArg, argv[i + 1]);
-    }
-
-    close(stderrPipeFd);
-    close(stdoutPipeFd);
     return 0;
 }
