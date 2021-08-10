@@ -60,6 +60,7 @@
                         android:layout_width="10dp"
                         android:layout_height="41dp"
                         android:layout_weight="1"
+                        android:text="@string/pingLabel"
                         android:textAlignment="textEnd"
                         android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
@@ -86,7 +87,7 @@
 
                     <TextView
                         android:id="@+id/textView3"
-                        android:layout_width="0dp"
+                        android:layout_width="64dp"
                         android:layout_height="45dp"
                         android:layout_weight="1"
                         android:text="@string/ipLabel"
@@ -98,8 +99,7 @@
                         android:layout_width="372dp"
                         android:layout_height="wrap_content"
                         android:ems="10"
-                        android:inputType="textPersonName"
-                        android:autofillHints="" />
+                        android:inputType="textPersonName" />
                 </LinearLayout>
 
                 <TextView
@@ -168,6 +168,13 @@
             android:orientation="horizontal"
             android:padding="10dp">
 
+            <Button
+                android:id="@+id/pingServerButt"
+                android:layout_width="169dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.85"
+                android:text="@string/startUdpPingServer" />
+
             <Space
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -179,6 +186,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.15"
                 android:text="@string/startIperf" />
+
         </LinearLayout>
 
         <LinearLayout

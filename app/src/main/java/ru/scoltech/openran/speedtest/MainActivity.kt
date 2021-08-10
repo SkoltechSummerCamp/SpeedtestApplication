@@ -12,14 +12,19 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
+    private val PING_SERVER_UDP_PORT = 49121
     lateinit var binding: ActivityMainBinding
     lateinit var iperfRunner: IperfRunner
 
+    @Volatile
+    private lateinit var pcs: PingCheckServer
+
     private val justStopICMPPingPingFlag = AtomicBoolean(false)
     private val justICMPPingInChecking = AtomicBoolean(false)
-    private var isPingInChecking = AtomicBoolean(false)
-    private var stopPingFlag = AtomicBoolean(false)
-    private var isPingICMPInChecking = AtomicBoolean(false)
+    private val isPingInChecking = AtomicBoolean(false)
+    private val stopPingFlag = AtomicBoolean(false)
+    private val isPingICMPInChecking = AtomicBoolean(false)
+    private val pingServerIsRunning = AtomicBoolean(false)
 
     @Volatile
     var pingValueBuffer = "---"
@@ -57,6 +62,9 @@ class MainActivity : AppCompatActivity() {
         binding.justPingButt.setOnClickListener {
             justICMPPing()
         }
+        binding.pingServerButt.setOnClickListener {
+            pingServerButtonAction()
+        }
     }
 
     private fun pingTestButtonAction() = runBlocking {
@@ -74,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                 do {
                     delay(1)
                     binding.pingValue.text = pingValueBuffer
-                } while (isPingInChecking.get()|| binding.pingValue.text != pingValueBuffer)
+                } while (isPingInChecking.get() || binding.pingValue.text != pingValueBuffer)
                 binding.pingTestButt.text = getString(R.string.testPing)
             }
         }
@@ -133,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     delay(10)
                     if (stringDeque.isNotEmpty())
                         binding.iperfOutput.append(stringDeque.removeFirst() + "\n")
-                    if(stopPingFlag.get()){
+                    if (stopPingFlag.get()) {
                         pinger.stopExecuting()
                         stopPingFlag.set(false)
                     }
@@ -145,6 +153,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun pingServerButtonAction() = runBlocking {
+        if (!pingServerIsRunning.get()) {
+            pingServerIsRunning.set(true)
+            binding.pingServerButt.text = getString(R.string.bigStop)
+            CoroutineScope(Dispatchers.IO).launch {
+                pcs = PingCheckServer(PING_SERVER_UDP_PORT)
+                pcs.start()
+            }
+        } else {
+            CoroutineScope(Dispatchers.Main).launch {
+                if(pcs.isAlive)
+                    pcs.interrupt()
+                binding.pingServerButt.text = getString(R.string.startUdpPingServer)
+                pingServerIsRunning.set(false)
+            }
+        }
+    }
 
     private fun justICMPPing() = runBlocking {
         if (!justICMPPingInChecking.get()) {
@@ -161,7 +186,7 @@ class MainActivity : AppCompatActivity() {
                 do {
                     delay(10)
                     binding.pingValue.text = pingValueBuffer
-                    if (justStopICMPPingPingFlag.get()){
+                    if (justStopICMPPingPingFlag.get()) {
                         pinger.stopExecuting()
                         justStopICMPPingPingFlag.set(false)
                     }

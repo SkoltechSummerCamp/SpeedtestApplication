@@ -6,7 +6,7 @@ import java.net.InetAddress
 suspend fun doPingTest(
     currValueSetter: (String) -> Unit,
     ip: String,
-    port: Int = 7,
+    port: Int = 49121,
     time: Int = 3000,
     delayValue: Long = 100
 ) {
