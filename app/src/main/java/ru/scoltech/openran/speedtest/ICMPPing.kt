@@ -1,5 +1,6 @@
 package ru.scoltech.openran.speedtest
 
+import android.util.Log
 import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -20,8 +21,10 @@ class ICMPPing {
             while (reader.readLine().also { line = it } != null) {
                 linesDeque.addLast(line)
                 delay(10)
+                line?.let { Log.d("", it) }
             }
         } catch (e: IOException) {
+            Log.d("", "external interruption")
         }
     }
 
