@@ -29,6 +29,7 @@ public class PingCheckServer extends Thread {
                 serverSocket.send(new DatagramPacket(inputPacket.getData(), inputPacket.getLength(), clientAddress, clientPort));
             }
         } catch (IOException e) {
+            
             Log.d("", "the server has been stopped");
         }
     }

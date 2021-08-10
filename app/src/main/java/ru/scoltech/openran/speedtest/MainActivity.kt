@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     @Volatile
     private lateinit var pcs: PingCheckServer
 
-    private val justStopICMPPingPingFlag = AtomicBoolean(false)
+    private val justStopICMPPingFlag = AtomicBoolean(false)
     private val justICMPPingInChecking = AtomicBoolean(false)
     private val isPingInChecking = AtomicBoolean(false)
     private val stopPingFlag = AtomicBoolean(false)
@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     @Volatile
     var pingValueBuffer = "---"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -165,7 +166,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             CoroutineScope(Dispatchers.Main).launch {
                 Log.d("", "pcs thread is alive: ${pcs.isAlive}")
-                if(pcs.isAlive)
+                if (pcs.isAlive)
                     pcs.interrupt()
                 binding.pingServerButt.text = getString(R.string.startUdpPingServer)
                 pingServerIsRunning.set(false)
@@ -190,15 +191,15 @@ class MainActivity : AppCompatActivity() {
                 do {
                     delay(10)
                     binding.pingValue.text = pingValueBuffer
-                    if (justStopICMPPingPingFlag.get()) {
+                    if (justStopICMPPingFlag.get()) {
                         pinger.stopExecuting()
-                        justStopICMPPingPingFlag.set(false)
+                        justStopICMPPingFlag.set(false)
                     }
                 } while (justICMPPingInChecking.get() || binding.pingValue.text != pingValueBuffer)
                 binding.justPingButt.text = getString(R.string.justPing)
             }
         } else {
-            justStopICMPPingPingFlag.set(true)
+            justStopICMPPingFlag.set(true)
         }
     }
 }
