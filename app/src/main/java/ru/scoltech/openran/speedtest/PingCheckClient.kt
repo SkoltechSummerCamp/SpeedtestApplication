@@ -58,6 +58,12 @@ class PingCheckClient {
         time: Int = 3000,
         delayValue: Long = 100
     ) {
+        val formatter: (String) -> String = {
+            var strBuffer = listOf<String>()
+            if (it.contains(".") && it.split('.').also { strBuffer = it }[1].length > 2)
+                strBuffer[0] + "." + strBuffer[1].substring(0, 2)
+            else it
+        }
         if (inPingChecking.get()) {
             currValueSetter("Error")
         } else {
@@ -80,7 +86,7 @@ class PingCheckClient {
                     if (currValue == -1)
                         mistakesCounter++
                     else {
-                        currValueSetter(currValue.toDouble().div(1000_000).toString().format("%.2f"))
+                        currValueSetter(formatter(currValue.toDouble().div(1000_000).toString()))
                         counter += currValue
                     }
                     delay(delayValue)
@@ -91,7 +97,7 @@ class PingCheckClient {
                 } else {
                     val result =
                         ((counter.toDouble()) / ((number.toDouble() - mistakesCounter.toDouble()) * 1000_000)).toString()
-                    currValueSetter(result.format("%.2f"))
+                    currValueSetter(formatter(result))
                 }
             }
         }

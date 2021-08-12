@@ -3,49 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".MainActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="66dp"
-            android:orientation="horizontal"
-            android:padding="10dp">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/deviceIpText"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/deviceIp"/>
-
-            <Button
-                android:id="@+id/refreshButton"
-                android:layout_width="wrap_content"
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minHeight="48dp"
-                android:text="@string/refreshIp" />
-
-            <Button
-                android:id="@+id/hideCollapseButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/hideIp" />
-
-        </LinearLayout>
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="153dp">
+                android:text="@string/simple_ping" />
 
             <LinearLayout
+                android:id="@+id/pingLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -79,8 +59,8 @@
 
                     <TextView
                         android:id="@+id/Ping"
-                        android:layout_width="10dp"
-                        android:layout_height="41dp"
+                        android:layout_width="25dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:text="@string/pingLabel"
                         android:textAlignment="textEnd"
@@ -88,7 +68,7 @@
 
                     <TextView
                         android:id="@+id/pingValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="7dp"
                         android:layout_height="41dp"
                         android:layout_weight="1"
                         android:text="@string/noneVal"
@@ -96,34 +76,70 @@
 
                     <Button
                         android:id="@+id/pingTestButt"
-                        android:layout_width="36dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/udpPing" />
 
                     <Button
                         android:id="@+id/justPingButt"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="wrap_content"
                         android:text="@string/icmpPing" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/ipInfo"
+                <Button
+                    android:id="@+id/pingServerButt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:scrollbars="vertical" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                </LinearLayout>
+                    android:text="@string/startUdpPingServer" />
 
             </LinearLayout>
-        </ScrollView>
+
+            <ImageButton
+                android:id="@+id/expandButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:srcCompat="@android:drawable/arrow_down_float" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="66dp"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/deviceIpText"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/deviceIp" />
+
+            <Button
+                android:id="@+id/refreshButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                android:text="@string/refreshIp" />
+
+            <Button
+                android:id="@+id/hideCollapseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/hideIp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/ipInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:scrollbars="vertical" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -155,13 +171,6 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp">
-
-            <Button
-                android:id="@+id/pingServerButt"
-                android:layout_width="169dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.85"
-                android:text="@string/startUdpPingServer" />
 
             <Space
                 android:layout_width="wrap_content"
@@ -196,6 +205,7 @@
                 android:scrollbarStyle="outsideInset"
                 android:scrollbars="vertical"
                 android:verticalScrollbarPosition="right" />
+
         </LinearLayout>
 
     </LinearLayout>

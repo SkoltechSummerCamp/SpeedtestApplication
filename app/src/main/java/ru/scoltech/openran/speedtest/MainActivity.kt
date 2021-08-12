@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.ArrayAdapter
+import androidx.core.view.isVisible
 import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import java.net.Inet4Address
@@ -57,14 +58,14 @@ class MainActivity : AppCompatActivity() {
 
         startStopButtonDispatcher.firstAction = {
             Log.d("spiner", binding.spinner.selectedItemPosition.toString())
-            when(binding.spinner.selectedItemPosition) {
+            when (binding.spinner.selectedItemPosition) {
                 0 -> startIperf()
                 1 -> runIcmpPingAsCommand()
             }
             binding.spinner.isEnabled = false
         }
         startStopButtonDispatcher.secondAction = {
-            when(binding.spinner.selectedItemPosition) {
+            when (binding.spinner.selectedItemPosition) {
                 0 -> stopIperf()
                 1 -> stopICMPPing()
             }
@@ -103,6 +104,19 @@ class MainActivity : AppCompatActivity() {
             stopICMPPing()
         }
 
+        binding.expandButton.setOnClickListener {
+            if (binding.pingLayout.isVisible) {
+                binding.pingLayout.isVisible = false
+                binding.expandButton.setImageResource(android.R.drawable.arrow_down_float)
+
+            } else {
+                binding.pingLayout.isVisible = true
+                binding.expandButton.setImageResource(android.R.drawable.arrow_up_float)
+
+            }
+        }
+        binding.pingLayout.isVisible = false
+
     }
 
     private fun startPingCheckServer() {
@@ -133,7 +147,6 @@ class MainActivity : AppCompatActivity() {
                 { value: String ->
                     runOnUiThread {
                         binding.pingValue.text = value
-                        Log.d("ping:", "")
                     }
                 },
                 binding.serverIP.text.toString()
