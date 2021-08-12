@@ -15,7 +15,7 @@ class ICMPPing {
 
     private fun executePing(args: String, outputHandler: (String) -> Unit) {
         if (!inExecuting.get()) {
-            inExecuting.set(false)
+            inExecuting.set(true)
             currentProcess = ProcessBuilder("sh").redirectErrorStream(true).start()
             val os = DataOutputStream(currentProcess!!.outputStream)
             os.writeBytes("ping $args\n")

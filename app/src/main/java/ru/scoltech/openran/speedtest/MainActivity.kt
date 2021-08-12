@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pingServerButtonDispatcher: ButtonDispatcherOfTwoStates
     private lateinit var icmpPingAsCommandDispatcher: ButtonDispatcherOfTwoStates
     private lateinit var justICMPPingDispatcher: ButtonDispatcherOfTwoStates
+    private lateinit var startStopButtonDispatcher: ButtonDispatcherOfTwoStates
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +43,6 @@ class MainActivity : AppCompatActivity() {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinner.adapter = adapter
         }
-
         binding.refreshButton.setOnClickListener { refreshAddresses() }
         refreshAddresses()
 
@@ -51,13 +51,33 @@ class MainActivity : AppCompatActivity() {
             it.stderrHandler = ::handleIperfOutput
         }
 
-        binding.startStopButton.setOnClickListener { startIperf() }
+        startStopButtonDispatcher = ButtonDispatcherOfTwoStates(
+            binding.startStopButton, this,
+            applicationContext.getString(R.string.stopIperf)
+        )
+
+        startStopButtonDispatcher.firstAction = {
+            Log.d("spiner", binding.spinner.selectedItemPosition.toString())
+            when(binding.spinner.selectedItemPosition) {
+                0 -> startIperf()
+                1 -> runIcmpPingAsCommand()
+            }
+            binding.spinner.isEnabled = false
+        }
+        startStopButtonDispatcher.secondAction = {
+            when(binding.spinner.selectedItemPosition) {
+                0 -> stopIperf()
+                1 -> stopICMPPing()
+            }
+            binding.spinner.isEnabled = true
+        }
+
 
 
         pingTestButtonDispatcher = RunForShortTimeButtonDispatcher(
             binding.pingTestButt,
             this,
-            applicationContext.getString(R.string.testPing)
+            applicationContext.getString(R.string.pingTesting)
         ) { resetAct ->
             pingTestButtonAction(resetAct)
         }
@@ -166,7 +186,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.iperfArgs.isEnabled = false
         binding.startStopButton.text = applicationContext.getString(R.string.stopIperf)
-        binding.startStopButton.setOnClickListener { stopIperf() }
     }
 
     private fun stopIperf() {
@@ -174,13 +193,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.iperfArgs.isEnabled = true
         binding.startStopButton.text = applicationContext.getString(R.string.startIperf)
-        binding.startStopButton.setOnClickListener { startIperf() }
     }
 
     private fun runIcmpPingAsCommand() = runBlocking {
-        val host = binding.serverIP.text.toString()
+        val args = binding.iperfArgs.text.toString()
         CoroutineScope(Dispatchers.IO).launch {
-            pingerByICMP.performPingWithArgs(host) { line ->
+            pingerByICMP.performPingWithArgs(args) { line ->
                 runOnUiThread {
                     binding.iperfOutput.append(line + "\n")
                 }
@@ -189,6 +207,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopICMPPing() {
+        Log.d("ping", "stop");
         pingerByICMP.stopExecuting()
     }
 
