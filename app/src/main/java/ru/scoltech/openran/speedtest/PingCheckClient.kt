@@ -73,12 +73,6 @@ class PingCheckClient {
                 null
             }
             if (address != null) {
-                val formatter: (String) -> String = {
-                    var strBuffer = listOf<String>()
-                    if (it.contains(".") && it.split('.').also { strBuffer = it }[1].length > 2)
-                        strBuffer[0] + "." + strBuffer[1].substring(0, 2)
-                    else it
-                }
 
                 while (System.currentTimeMillis() - start < time) {
                     number++
@@ -86,7 +80,7 @@ class PingCheckClient {
                     if (currValue == -1)
                         mistakesCounter++
                     else {
-                        currValueSetter(formatter(currValue.toDouble().div(1000_000).toString()))
+                        currValueSetter(currValue.toDouble().div(1000_000).toString().format("%.2f"))
                         counter += currValue
                     }
                     delay(delayValue)
@@ -97,7 +91,7 @@ class PingCheckClient {
                 } else {
                     val result =
                         ((counter.toDouble()) / ((number.toDouble() - mistakesCounter.toDouble()) * 1000_000)).toString()
-                    currValueSetter(formatter(result))
+                    currValueSetter(result.format("%.2f"))
                 }
             }
         }

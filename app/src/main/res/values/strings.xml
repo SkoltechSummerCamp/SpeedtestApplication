@@ -18,5 +18,6 @@
     <string name="startUdpPingServer">start udp ping server</string>
     <string-array name="commands">
         <item>iPerf</item>
+        <item>Ping</item>>
     </string-array>
 </resources>
