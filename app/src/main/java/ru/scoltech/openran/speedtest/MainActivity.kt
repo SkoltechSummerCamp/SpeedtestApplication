@@ -28,9 +28,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var icmpPingAsCommandDispatcher: ButtonDispatcherOfTwoStates
     private lateinit var justICMPPingDispatcher: ButtonDispatcherOfTwoStates
 
-    @Volatile
-    var pingValueBuffer = "---"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
