@@ -1,51 +1,59 @@
 package ru.scoltech.openran.speedtest
 
 import android.util.Log
-import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ICMPPing {
-    private val currentProcess: Process = ProcessBuilder("sh").redirectErrorStream(true).start()
+    private val inExecuting = AtomicBoolean(false)
 
-    suspend fun performPingWithArgs(args: String, linesDeque: ConcurrentLinkedDeque<String>) {
-        val os = DataOutputStream(currentProcess.outputStream)
-        os.writeBytes("ping $args\n")
-        os.flush()
-        val reader = BufferedReader(InputStreamReader(currentProcess.inputStream))
-        var line: String?
-        try {
-            while (reader.readLine().also { line = it } != null) {
-                linesDeque.addLast(line)
-                delay(10)
-                line?.let { Log.d("", it) }
+    @Volatile
+    private var currentProcess: Process? = null
+
+    private fun executePing(args: String, outputHandler: (String) -> Unit) {
+        if (!inExecuting.get()) {
+            inExecuting.set(false)
+            currentProcess = ProcessBuilder("sh").redirectErrorStream(true).start()
+            val os = DataOutputStream(currentProcess!!.outputStream)
+            os.writeBytes("ping $args\n")
+            os.flush()
+            val reader = BufferedReader(InputStreamReader(currentProcess!!.inputStream))
+            var line: String?
+            try {
+                while (reader.readLine().also { line = it } != null) {
+                    outputHandler(line!!)
+                }
+            } catch (e: IOException) {
+                Log.d("", "external interruption")
             }
-        } catch (e: IOException) {
-            Log.d("", "external interruption")
+            inExecuting.set(false)
         }
     }
 
-    fun justPingByHost(host: String, currValueGetter: (String) -> Unit) {
-        val os = DataOutputStream(currentProcess.outputStream)
-        os.writeBytes("ping $host\n")
-        os.flush()
-        val reader = BufferedReader(InputStreamReader(currentProcess.inputStream))
-        var line: String?
-        try {
-            while (reader.readLine().also { line = it } != null) {
-                line!!.split(" ").forEach {
-                    if (it.contains("time="))
-                        currValueGetter(it.split("=")[1])
+    fun performPingWithArgs(args: String, linesTaker: (String) -> Unit) {
+        executePing(args) { line ->
+            linesTaker(line)
+            line.let { Log.d("Ping", it) }
+        }
+    }
+
+    fun justPingByHost(host: String, currValueTaker: (String) -> Unit) {
+        executePing(host) { line ->
+            line.split(" ").forEach {
+                if (it.contains("time=")) {
+                    currValueTaker(it.split("=")[1])
                 }
             }
-        } catch (e: IOException) {
         }
     }
 
+
     fun stopExecuting() {
-        currentProcess.destroy()
+        if (inExecuting.get()) {
+            currentProcess!!.destroy()
+        }
     }
 }

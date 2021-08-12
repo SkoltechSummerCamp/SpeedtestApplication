@@ -9,7 +9,6 @@ import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import java.net.Inet4Address
 import java.net.NetworkInterface
-import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
@@ -20,12 +19,14 @@ class MainActivity : AppCompatActivity() {
     @Volatile
     private lateinit var pcs: PingCheckServer
 
-    private val justStopICMPPingFlag = AtomicBoolean(false)
     private val justICMPPingInChecking = AtomicBoolean(false)
-    private val isPingInChecking = AtomicBoolean(false)
-    private val stopPingFlag = AtomicBoolean(false)
-    private val isPingICMPInChecking = AtomicBoolean(false)
-    private val pingServerIsRunning = AtomicBoolean(false)
+    val pingerByICMP = ICMPPing()
+
+
+    private lateinit var pingTestButtonDispatcher: RunForShortTimeButtonDispatcher
+    private lateinit var pingServerButtonDispatcher: ButtonDispatcherOfTwoStates
+    private lateinit var icmpPingAsCommandDispatcher: ButtonDispatcherOfTwoStates
+    private lateinit var justICMPPingDispatcher: ButtonDispatcherOfTwoStates
 
     @Volatile
     var pingValueBuffer = "---"
@@ -52,41 +53,95 @@ class MainActivity : AppCompatActivity() {
             it.stdoutHandler = ::handleIperfOutput
             it.stderrHandler = ::handleIperfOutput
         }
+
         binding.startStopButton.setOnClickListener { startIperf() }
-        binding.pingTestButt.setOnClickListener {
-            pingTestButtonAction()
+
+
+        pingTestButtonDispatcher = RunForShortTimeButtonDispatcher(
+            binding.pingTestButt,
+            this,
+            applicationContext.getString(R.string.testPing)
+        ) { resetAct ->
+            pingTestButtonAction(resetAct)
         }
-        binding.checkIcmpPingButt.setOnClickListener {
-            startICMPPing()
+
+        pingServerButtonDispatcher = ButtonDispatcherOfTwoStates(
+            binding.pingServerButt,
+            this,
+            applicationContext.getString(R.string.bigStop)
+        )
+        pingServerButtonDispatcher.firstAction = { startPingCheckServer() }
+        pingServerButtonDispatcher.secondAction = { stopPingServer() }
+
+        icmpPingAsCommandDispatcher = ButtonDispatcherOfTwoStates(
+            binding.checkIcmpPingButt,
+            this,
+            applicationContext.getString(R.string.bigStop)
+        )
+
+        icmpPingAsCommandDispatcher.firstAction = {
+            runIcmpPingAsCommand()
+            justICMPPingDispatcher.lock()
         }
+
+        icmpPingAsCommandDispatcher.secondAction = {
+            stopICMPPing()
+            justICMPPingDispatcher.unlock()
+        }
+
         binding.iperfOutput.movementMethod = ScrollingMovementMethod()
 
-        binding.justPingButt.setOnClickListener {
+        justICMPPingDispatcher = ButtonDispatcherOfTwoStates(
+            binding.justPingButt,
+            this,
+            applicationContext.getString(R.string.bigStop)
+        )
+        justICMPPingDispatcher.firstAction = {
             justICMPPing()
+            icmpPingAsCommandDispatcher.lock()
         }
-        binding.pingServerButt.setOnClickListener {
-            pingServerButtonAction()
+        justICMPPingDispatcher.secondAction = {
+            stopICMPPing()
+            icmpPingAsCommandDispatcher.unlock()
+        }
+
+    }
+
+    private fun startPingCheckServer() {
+        binding.pingServerButt.text = getString(R.string.bigStop)
+        CoroutineScope(Dispatchers.IO).launch {
+            pcs = PingCheckServer(PING_SERVER_UDP_PORT)
+            pcs.start()
         }
     }
 
-    private fun pingTestButtonAction() = runBlocking {
-        if (!isPingInChecking.get()) {
-            isPingInChecking.set(true)
-            binding.pingTestButt.text = getString(R.string.pingTesting)
-            CoroutineScope(Dispatchers.IO).launch {
-                doPingTest(
-                    { value: String -> pingValueBuffer = value },
-                    binding.serverIP.text.toString()
-                )
-                isPingInChecking.set(false)
-            }
-            CoroutineScope(Dispatchers.Main).launch {
-                do {
-                    delay(1)
-                    binding.pingValue.text = pingValueBuffer
-                } while (isPingInChecking.get() || binding.pingValue.text != pingValueBuffer)
-                binding.pingTestButt.text = getString(R.string.testPing)
-            }
+    private fun stopPingServer() {
+        CoroutineScope(Dispatchers.Main).launch {
+            Log.d("ping server", "pcs thread is alive: ${pcs.isAlive}")
+            if (pcs.isAlive)
+                pcs.interrupt()
+            binding.pingServerButt.text = getString(R.string.startUdpPingServer)
+            delay(500)
+            Log.d("ping server:", "pcs thread is alive: ${pcs.isAlive}")
+        }
+    }
+
+    private fun pingTestButtonAction(afterWorkAct: () -> Unit) = runBlocking {
+        val pcl = PingCheckClient()
+        Log.d("pingTestButtonAction", "started")
+        binding.pingTestButt.text = getString(R.string.pingTesting)
+        CoroutineScope(Dispatchers.IO).launch {
+            pcl.doPingTest(
+                { value: String ->
+                    runOnUiThread {
+                        binding.pingValue.text = value
+                        Log.d("ping:", "")
+                    }
+                },
+                binding.serverIP.text.toString()
+            )
+            afterWorkAct()
+            Log.d("pingTestButtonAction", "ended")
         }
     }
 
@@ -125,81 +180,31 @@ class MainActivity : AppCompatActivity() {
         binding.startStopButton.setOnClickListener { startIperf() }
     }
 
-    private fun startICMPPing() = runBlocking {
-        if (!isPingICMPInChecking.get()) {
-            val pinger = ICMPPing()
-            isPingICMPInChecking.set(true)
-            val host = binding.serverIP.text.toString()
-            val stringDeque: ConcurrentLinkedDeque<String> = ConcurrentLinkedDeque()
-
-            CoroutineScope(Dispatchers.IO).launch {
-                pinger.performPingWithArgs(host, stringDeque)
-                isPingICMPInChecking.set(false)
-            }
-
-            CoroutineScope(Dispatchers.Main).launch {
-                binding.checkIcmpPingButt.text = getString(R.string.bigStop)
-                while ((isPingICMPInChecking.get() || stringDeque.isNotEmpty())) {
-                    delay(10)
-                    if (stringDeque.isNotEmpty())
-                        binding.iperfOutput.append(stringDeque.removeFirst() + "\n")
-                    if (stopPingFlag.get()) {
-                        pinger.stopExecuting()
-                        stopPingFlag.set(false)
-                    }
+    private fun runIcmpPingAsCommand() = runBlocking {
+        val host = binding.serverIP.text.toString()
+        CoroutineScope(Dispatchers.IO).launch {
+            pingerByICMP.performPingWithArgs(host) { line ->
+                runOnUiThread {
+                    binding.iperfOutput.append(line + "\n")
                 }
-                binding.checkIcmpPingButt.text = getString(R.string.performAsCommand)
             }
-        } else {
-            stopPingFlag.set(true)
         }
     }
 
-    private fun pingServerButtonAction() = runBlocking {
-        if (!pingServerIsRunning.get()) {
-            pingServerIsRunning.set(true)
-            binding.pingServerButt.text = getString(R.string.bigStop)
-            CoroutineScope(Dispatchers.IO).launch {
-                pcs = PingCheckServer(PING_SERVER_UDP_PORT)
-                pcs.start()
-            }
-        } else {
-            CoroutineScope(Dispatchers.Main).launch {
-                Log.d("", "pcs thread is alive: ${pcs.isAlive}")
-                if (pcs.isAlive)
-                    pcs.interrupt()
-                binding.pingServerButt.text = getString(R.string.startUdpPingServer)
-                pingServerIsRunning.set(false)
-                delay(500)
-                Log.d("", "pcs thread is alive: ${pcs.isAlive}")
-            }
-        }
+    private fun stopICMPPing() {
+        pingerByICMP.stopExecuting()
     }
+
 
     private fun justICMPPing() = runBlocking {
-        if (!justICMPPingInChecking.get()) {
-            justICMPPingInChecking.set(true)
-            binding.justPingButt.text = getString(R.string.bigStop)
-            val pinger = ICMPPing()
-            CoroutineScope(Dispatchers.IO).launch {
-                pinger.justPingByHost(
-                    binding.serverIP.text.toString()
-                ) { value: String -> pingValueBuffer = value }
-                justICMPPingInChecking.set(false)
-            }
-            CoroutineScope(Dispatchers.Main).launch {
-                do {
-                    delay(10)
-                    binding.pingValue.text = pingValueBuffer
-                    if (justStopICMPPingFlag.get()) {
-                        pinger.stopExecuting()
-                        justStopICMPPingFlag.set(false)
-                    }
-                } while (justICMPPingInChecking.get() || binding.pingValue.text != pingValueBuffer)
-                binding.justPingButt.text = getString(R.string.justPing)
-            }
-        } else {
-            justStopICMPPingFlag.set(true)
+        justICMPPingInChecking.set(true)
+        binding.justPingButt.text = getString(R.string.bigStop)
+        val pinger = ICMPPing()
+        CoroutineScope(Dispatchers.IO).launch {
+            pinger.justPingByHost(
+                binding.serverIP.text.toString()
+            ) { value -> runOnUiThread { binding.pingValue.text = value } }
+            justICMPPingInChecking.set(false)
         }
     }
 }
