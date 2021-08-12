@@ -199,9 +199,8 @@ class MainActivity : AppCompatActivity() {
     private fun justICMPPing() = runBlocking {
         justICMPPingInChecking.set(true)
         binding.justPingButt.text = getString(R.string.bigStop)
-        val pinger = ICMPPing()
         CoroutineScope(Dispatchers.IO).launch {
-            pinger.justPingByHost(
+            pingerByICMP.justPingByHost(
                 binding.serverIP.text.toString()
             ) { value -> runOnUiThread { binding.pingValue.text = value } }
             justICMPPingInChecking.set(false)
