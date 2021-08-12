@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var pingTestButtonDispatcher: RunForShortTimeButtonDispatcher
     private lateinit var pingServerButtonDispatcher: ButtonDispatcherOfTwoStates
-    private lateinit var icmpPingAsCommandDispatcher: ButtonDispatcherOfTwoStates
     private lateinit var justICMPPingDispatcher: ButtonDispatcherOfTwoStates
     private lateinit var startStopButtonDispatcher: ButtonDispatcherOfTwoStates
 
@@ -90,22 +89,6 @@ class MainActivity : AppCompatActivity() {
         pingServerButtonDispatcher.firstAction = { startPingCheckServer() }
         pingServerButtonDispatcher.secondAction = { stopPingServer() }
 
-        icmpPingAsCommandDispatcher = ButtonDispatcherOfTwoStates(
-            binding.checkIcmpPingButt,
-            this,
-            applicationContext.getString(R.string.bigStop)
-        )
-
-        icmpPingAsCommandDispatcher.firstAction = {
-            runIcmpPingAsCommand()
-            justICMPPingDispatcher.lock()
-        }
-
-        icmpPingAsCommandDispatcher.secondAction = {
-            stopICMPPing()
-            justICMPPingDispatcher.unlock()
-        }
-
         binding.iperfOutput.movementMethod = ScrollingMovementMethod()
 
         justICMPPingDispatcher = ButtonDispatcherOfTwoStates(
@@ -115,11 +98,9 @@ class MainActivity : AppCompatActivity() {
         )
         justICMPPingDispatcher.firstAction = {
             justICMPPing()
-            icmpPingAsCommandDispatcher.lock()
         }
         justICMPPingDispatcher.secondAction = {
             stopICMPPing()
-            icmpPingAsCommandDispatcher.unlock()
         }
 
     }
@@ -207,7 +188,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopICMPPing() {
-        Log.d("ping", "stop");
         pingerByICMP.stopExecuting()
     }
 
