@@ -1,0 +1,120 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:layout_alignParentStart="true"
+
+    android:layout_alignParentTop="true"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:background="@drawable/card_background">
+
+    <!--    Speed info-->
+    <RelativeLayout
+        android:id="@+id/speed_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp">
+
+        <TextView
+            android:id="@+id/integer_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_toStartOf="@+id/dot_speed"
+            android:gravity="top"
+            android:lineSpacingExtra="0sp"
+
+            android:text="324"
+            android:textAppearance="@style/headline_1"
+            android:textColor="@color/colorLightBackground" />
+
+        <TextView
+            android:id="@+id/dot_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:gravity="top"
+
+            android:lineSpacingExtra="0sp"
+            android:text="."
+
+            android:textAppearance="@style/headline_1"
+            android:textColor="@color/colorLightBackground" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/dot_speed">
+
+            <TextView
+                android:id="@+id/fraction_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:gravity="top"
+                android:lineSpacingExtra="0sp"
+
+                android:text="89"
+                android:textAppearance="@style/headline_1"
+                android:textColor="@color/colorLightBackground" />
+
+            <TextView
+                android:id="@+id/caption_spped"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_below="@+id/fraction_speed"
+                android:layout_marginTop="-10dp"
+
+                android:text="@string/mbps"
+                android:textAppearance="@style/headline_2"
+                android:textColor="@color/colorLightBackground" />
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+    <com.example.wavemockapplication.Wave
+        android:id="@+id/progress_wave"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_below="@id/speed_info"
+        android:layout_marginTop="20dp" />
+
+    <!--    Ping info-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+
+            android:id="@+id/value_ping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="40dp"
+
+            android:text="34"
+            android:textAppearance="@style/headline_4"
+            android:textColor="@color/colorLightBackground" />
+
+        <TextView
+            android:id="@+id/label_ping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="80dp"
+
+            android:text="@string/ping"
+            android:textAppearance="@style/headline_4"
+            android:textColor="@color/colorLightBackground" />
+    </RelativeLayout>
+
+
+</RelativeLayout>
