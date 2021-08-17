@@ -11,13 +11,13 @@ import com.example.wavemockapplication.Wave;
 
 public class CardView extends LinearLayout {
 
-    TextView integerSpeedTV;
-    TextView fractionSpeedTV;
-    TextView pingTV;
+    private TextView integerSpeedTV;
+    private TextView fractionSpeedTV;
+    private TextView pingTV;
 
-    TextView dotCaption;
-    TextView mbpsCaption;
-    TextView pingCaption;
+    private TextView dotCaption;
+    private TextView mbpsCaption;
+    private TextView pingCaption;
 
     Wave mWave;
 

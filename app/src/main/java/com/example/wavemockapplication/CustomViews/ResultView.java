@@ -9,9 +9,9 @@ import com.example.wavemockapplication.R;
 
 public class ResultView extends TableLayout {
 
-    TextView downloadSpeedTV;
-    TextView uploadSpeedTV;
-    TextView pingTV;
+    private TextView downloadSpeedTV;
+    private TextView uploadSpeedTV;
+    private TextView pingTV;
 
     public ResultView(Context context, AttributeSet attrs) {
         super(context, attrs);

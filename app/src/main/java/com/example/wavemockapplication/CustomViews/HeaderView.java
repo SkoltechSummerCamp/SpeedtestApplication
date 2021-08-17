@@ -16,15 +16,15 @@ import com.example.wavemockapplication.R;
 
 public class HeaderView extends LinearLayout {
 
-    boolean isActiveReturnBtn;
-    boolean isActiveButtonGroup;
-    String sectionNameStr;
+    private boolean isActiveReturnBtn;
+    private boolean isActiveButtonGroup;
+    private String sectionNameStr;
 
-    Button returnBtn;
-    Button historyBtn;
-    Button modeBtn;
+    private Button returnBtn;
+    private Button historyBtn;
+    private Button modeBtn;
 
-    TextView sectionNameTV;
+    private TextView sectionNameTV;
 
     public HeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);

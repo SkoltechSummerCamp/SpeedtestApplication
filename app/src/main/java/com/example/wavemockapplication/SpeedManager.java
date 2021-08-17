@@ -6,28 +6,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SpeedManager {
-    public List<String> uploadList;
-    public List<String> downloadList;
+    private List<String> uploadList;
+    private List<String> downloadList;
 
     public SpeedManager(List<String> list) {
 
         downloadList = new ArrayList<>();
         uploadList = new ArrayList<>();
 
-        for (int i = 0; i < list.size() / 2; i++) {
-            downloadList.add(list.get(i));
-        }
-        for (int i = list.size() / 2; i < list.size(); i++) {
-            uploadList.add(list.get(i));
-        }
+        downloadList.addAll(list.subList(0, list.size() / 2));
+        uploadList.addAll(list.subList(list.size() / 2, list.size()));
+
     }
 
 
     private Pair<Integer, Integer> convertBitToMbps(String speed) {
         if (speed != null) {
 
-            int int_speed = Integer.parseInt(speed) / 1000000;
-            int frac_speed = Integer.parseInt(speed) % 1000000;
+            int speedInt = Integer.parseInt(speed);
+
+            int int_speed = speedInt / 1000000;
+            int frac_speed = speedInt % 1000000;
 
             return new Pair<>(int_speed, frac_speed);
         }
@@ -53,7 +52,7 @@ public class SpeedManager {
         int sum = 0;
         if (!list.isEmpty()) {
             for (String sp : list) {
-                sum += Integer.parseInt(sp.substring(0, sp.length() - 3));
+                sum += Integer.parseInt(sp) / 1000;
             }
             int speed = sum / list.size();
 
@@ -76,4 +75,11 @@ public class SpeedManager {
         return getAverageSpeed(downloadList);
     }
 
+    public List<String> getDownloadList() {
+        return downloadList;
+    }
+
+    public List<String> getUploadList() {
+        return uploadList;
+    }
 }

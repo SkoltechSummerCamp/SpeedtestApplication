@@ -9,8 +9,8 @@ import com.example.wavemockapplication.R;
 
 public class SubResultView extends LinearLayout {
 
-    TextView downloadSpeedTV;
-    TextView uploadSpeedTV;
+    private TextView downloadSpeedTV;
+    private TextView uploadSpeedTV;
 
     public SubResultView(Context context, AttributeSet attrs) {
         super(context, attrs);

@@ -2,13 +2,10 @@ package com.example.wavemockapplication.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 import android.os.Handler;
 
@@ -131,9 +128,9 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Log.d("mytag", "Doing task download" + i[0]);
 
-                if (i[0] < sm.downloadList.size()) {
+                if (i[0] < sm.getDownloadList().size()) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.downloadList.get(i[0]), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadList().get(i[0]), 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i[0]++;
@@ -177,9 +174,9 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Log.d("mytag", "Doing task upload" + i[0]);
 
-                if (i[0] < sm.uploadList.size()) {
+                if (i[0] < sm.getUploadList().size()) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.uploadList.get(i[0]), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadList().get(i[0]), 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i[0]++;
@@ -256,6 +253,9 @@ public class MainActivity extends AppCompatActivity {
 
         actionTV.setVisibility(View.GONE);
         actionBtn.setStop();
+
+        shareBtn.setVisibility(View.GONE);
+        saveBtn.setVisibility(View.GONE);
     }
 
     public void onStopUI() {
