@@ -36,4 +36,5 @@
     <string name="tap_to_start_session">Tap to start session</string>
     <string name="empty">_____</string>
     <string name="start">start</string>
+    <string name="download_speed">Download speed </string>
 </resources>

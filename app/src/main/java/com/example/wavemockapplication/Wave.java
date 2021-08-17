@@ -67,14 +67,4 @@ public class Wave extends View {
         mPaint.setColor(color);
     }
 
-//    public void attachPoints(List<Point> points) {
-//        if (points.size() > 0) {
-//            mPoints = new Point[points.size()];
-//            for (int i = 0; i < points.size(); i++) {
-//                mPoints[i] = points.get(i);
-//            }
-//        }
-//    }
-
-
 }

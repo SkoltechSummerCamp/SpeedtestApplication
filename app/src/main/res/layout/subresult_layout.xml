@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <!--    Download col-->
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/block_download"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/label_download"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
 
             android:text="@string/download"
             android:textAppearance="@style/headline_3"
@@ -24,9 +25,6 @@
             android:id="@+id/value_download"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/label_download"
-
-            android:layout_centerHorizontal="true"
 
             android:text="@string/empty"
             android:textAppearance="@style/headline_4"
@@ -37,27 +35,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:layout_below="@+id/value_download"
-            android:layout_centerHorizontal="true"
-
             android:text="@string/mbps"
             android:textAppearance="@style/subtitle_1"
             android:textColor="@color/neutral_100" />
-    </RelativeLayout>
+    </LinearLayout>
 
     <!--    Upload col-->
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/block_upload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="40dp"
-        android:layout_toRightOf="@+id/block_download">
+        android:layout_toEndOf="@+id/block_download"
+        android:gravity="center"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/label_upload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
 
             android:text="@string/upload"
             android:textAppearance="@style/headline_3"
@@ -67,9 +63,6 @@
             android:id="@+id/value_upload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/label_upload"
-
-            android:layout_centerHorizontal="true"
 
             android:text="@string/empty"
             android:textAppearance="@style/headline_4"
@@ -80,13 +73,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:layout_below="@+id/value_upload"
-            android:layout_centerHorizontal="true"
-
             android:text="@string/mbps"
             android:textAppearance="@style/subtitle_1"
             android:textColor="@color/neutral_100" />
-    </RelativeLayout>
+    </LinearLayout>
 
 
-</RelativeLayout>
+</LinearLayout>

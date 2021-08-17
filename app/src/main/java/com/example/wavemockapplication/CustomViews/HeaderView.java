@@ -1,12 +1,17 @@
-package com.example.wavemockapplication;
+package com.example.wavemockapplication.CustomViews;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.example.wavemockapplication.Activities.MainActivity;
+import com.example.wavemockapplication.R;
 
 
 public class HeaderView extends LinearLayout {
@@ -25,16 +30,34 @@ public class HeaderView extends LinearLayout {
         super(context, attrs);
 
         inflate(getContext(), R.layout.header_layout, this);
+
         init();
 
         parseAttrs(context, attrs);
+
+        returnBtn.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                goToStart(v.getContext());
+            }
+        });
+
+        historyBtn.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                goToHistory(v.getContext());
+            }
+        });
+
+        modeBtn.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                goToDev(v.getContext());
+            }
+        });
     }
 
     private void init() {
         sectionNameTV = findViewById(R.id.section_name);
 
         returnBtn = findViewById(R.id.return_btn);
-
         historyBtn = findViewById(R.id.history_go_btn);
         modeBtn = findViewById(R.id.mode_switch_btn);
     }
@@ -69,6 +92,20 @@ public class HeaderView extends LinearLayout {
         } finally {
             typedArray.recycle();
         }
+    }
+
+    //TODO global: check if it efficient way to go to main menu, especially from the same activity
+    private void goToStart(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        context.startActivity(intent);
+    }
+
+    private void goToHistory(Context context) {
+        Log.d("mytag", "goToHistory: pressed btn");
+    }
+
+    private void goToDev(Context context) {
+        Log.d("mytag", "goToDev: pressed btn");
     }
 
     private void changeStateButtonGroup(boolean flag) {

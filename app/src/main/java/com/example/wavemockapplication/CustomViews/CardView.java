@@ -1,21 +1,26 @@
-package com.example.wavemockapplication;
+package com.example.wavemockapplication.CustomViews;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-//TODO: replace there and in xml deprecated RelativeLayout
-public class CardView extends RelativeLayout {
+import com.example.wavemockapplication.R;
+import com.example.wavemockapplication.Wave;
+
+public class CardView extends LinearLayout {
 
     TextView integerSpeedTV;
     TextView fractionSpeedTV;
     TextView pingTV;
 
-    int fractionSpeed;
-    int integerSpeed;
-    int ping;
+    TextView dotCaption;
+    TextView mbpsCaption;
+    TextView pingCaption;
+
+    Wave mWave;
+
     String mStatus;
 
 
@@ -33,6 +38,12 @@ public class CardView extends RelativeLayout {
         fractionSpeedTV = findViewById(R.id.fraction_speed);
 
         pingTV = findViewById(R.id.value_ping);
+
+        dotCaption = findViewById(R.id.dot_speed);
+        mbpsCaption = findViewById(R.id.caption_speed);
+        pingCaption = findViewById(R.id.label_ping);
+
+        mWave = findViewById(R.id.progress_wave);
     }
 
     private void parseAttrs(Context context, AttributeSet attrs) {
@@ -44,20 +55,7 @@ public class CardView extends RelativeLayout {
 
                 int attr = typedArray.getIndex(i);
 
-                if (attr == R.styleable.CardView_fraction_speed) {
-                    fractionSpeed = typedArray.getInteger(attr, 0);
-
-                    setFractionSpeed(fractionSpeed);
-                } else if (attr == R.styleable.CardView_integer_speed) {
-                    integerSpeed = typedArray.getInteger(attr, 0);
-
-                    setIntegerSpeed(integerSpeed);
-
-                } else if (attr == R.styleable.CardView_ping) {
-                    ping = typedArray.getInteger(attr, 0);
-
-                    setPing(ping);
-                } else if (attr == R.styleable.CardView_status) {
+                if (attr == R.styleable.CardView_status) {
                     mStatus = typedArray.getString(attr);
 
                     setStatus(mStatus);
@@ -79,15 +77,49 @@ public class CardView extends RelativeLayout {
         pingTV.setText(String.valueOf(ping));
     }
 
-    public void setIntegerSpeed(int speed) {
+    private void setIntegerSpeed(int speed) {
         integerSpeedTV.setText(String.valueOf(speed));
     }
 
-    public void setFractionSpeed(int speed) {
+    private void setFractionSpeed(int speed) {
         fractionSpeedTV.setText(String.valueOf(speed));
     }
 
     private void setDrawableStatus() {
     }
 
+    public void setInstantSpeed(int integerSpeed, int fractionSpeed) {
+        setFractionSpeed(fractionSpeed);
+        setIntegerSpeed(integerSpeed);
+    }
+
+
+    public void setDefaultCaptions() {
+        dotCaption.setText(".");
+        pingCaption.setText("ping");
+        mbpsCaption.setText("Mbps");
+
+    }
+
+    public void setEmptyCaptions() {
+        integerSpeedTV.setText("");
+        fractionSpeedTV.setText("");
+        pingTV.setText("");
+
+        dotCaption.setText("");
+        pingCaption.setText("");
+        mbpsCaption.setText("");
+    }
+
+    public void setMessage(String msg) {
+        integerSpeedTV.setText(msg);
+    }
+
+    public String getPing() {
+        return pingTV.getText().toString();
+    }
+
+    public Wave getWave() {
+        return mWave;
+    }
 }

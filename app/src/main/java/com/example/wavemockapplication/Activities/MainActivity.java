@@ -1,15 +1,27 @@
-package com.example.wavemockapplication;
+package com.example.wavemockapplication.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.os.Handler;
 
+import com.example.wavemockapplication.CustomButtons.ActionButton;
+import com.example.wavemockapplication.CustomButtons.SaveButton;
+import com.example.wavemockapplication.CustomButtons.ShareButton;
+import com.example.wavemockapplication.CustomViews.CardView;
+import com.example.wavemockapplication.CustomViews.HeaderView;
+import com.example.wavemockapplication.CustomViews.ResultView;
+import com.example.wavemockapplication.CustomViews.SubResultView;
+import com.example.wavemockapplication.R;
+import com.example.wavemockapplication.SpeedManager;
+import com.example.wavemockapplication.Wave;
 import com.opencsv.CSVReader;
 
 import java.io.IOException;
@@ -21,24 +33,28 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-
     Wave cWave;
     CardView mCard;
-    SubResultView mResults;
+    SubResultView mSubResults; // in progress result
     HeaderView mHeader;
+    ResultView mResults; // after finishing
+
+    //TODO global: merge SubResultView and ResultView and load only different xml
+    //TODO global: replace visibility changing with adding and removing components from the view
 
     //action elem
-    Button actionBtn;
+    ActionButton actionBtn;
     TextView actionTV;
+    ShareButton shareBtn;
+    SaveButton saveBtn;
 
     SpeedManager sm;
 
-    //TODO: replace deprecated handler
     Handler handler;
     Runnable task;
 
-    int MEASURING_DELAY = 200;
-    int TASK_DELAY = 1500;
+    final static int MEASURING_DELAY = 200;
+    final static int TASK_DELAY = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,11 +73,14 @@ public class MainActivity extends AppCompatActivity {
         actionBtn = findViewById(R.id.action_btn);
         actionTV = findViewById(R.id.action_text);
 
-        cWave = findViewById(R.id.progress_wave);
-        cWave.attachColor(getColor(R.color.mint));
-
         mCard = findViewById(R.id.card);
-        mResults = findViewById(R.id.subresult);
+        cWave = mCard.getWave();
+
+        mSubResults = findViewById(R.id.subresult);
+        mResults = findViewById(R.id.result);
+
+        shareBtn = findViewById(R.id.share_btn);
+        saveBtn = findViewById(R.id.save_btn);
 
     }
 
@@ -70,55 +89,22 @@ public class MainActivity extends AppCompatActivity {
 
             if (actionBtn.getContentDescription().toString().equals("start")) {
 
-                mCard.setVisibility(View.VISIBLE);
-                mResults.setVisibility(View.VISIBLE);
-
-                actionTV.setVisibility(View.GONE);
-
-                mHeader.setSectionName("Demonstration");
-                mHeader.disableButtonGroup();
-
-                setStopToActionBtn();
+                onPlayUI();
                 measureDownloadSpeed();
 
             } else if (actionBtn.getContentDescription().toString().equals("stop")) {
 
-                mHeader.enableButtonGroup();
-                mHeader.showReturnBtn();
-
-                setPlayToActionBtn();
+                onStopUI();
                 stopMeasuring();
+
             } else if (actionBtn.getContentDescription().toString().equals("play")) {
 
-                mHeader.disableButtonGroup();
-                mHeader.hideReturnBtn();
-
-                setStopToActionBtn();
+                onPlayUI();
                 measureDownloadSpeed();
             }
         }
     }
 
-    // TODO: refactor state
-    private void setStopToActionBtn() {
-        actionBtn.setContentDescription("stop");
-        actionBtn.setBackground(getDrawable(R.drawable.ic_stop_btn));
-    }
-
-    // TODO: refactor state
-    private void setPlayToActionBtn() { // when continue after stopping
-        actionBtn.setContentDescription("play");
-        actionBtn.setBackground(getDrawable(R.drawable.ic_play_btn));
-
-        mResults.setDownloadSpeed(getString(R.string.empty));
-        mResults.setUploadSpeed(getString(R.string.empty));
-    }
-
-    // TODO: refactor state
-    private void setStartToActionBtn() { // when start from main menu
-        actionBtn.setContentDescription("start");
-        actionBtn.setBackground(getDrawable(R.drawable.ic_start_btn));
-    }
 
     private List<String> readSpeedFromAssetsCSV(String filename) {
         List<String> records = new ArrayList<String>();
@@ -148,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 if (i[0] < sm.downloadList.size()) {
 
                     Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.downloadList.get(i[0]), 2);
-                    setInstantSpeed(instSpeed);
+                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i[0]++;
                     handler.postDelayed(this, MEASURING_DELAY);
@@ -161,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     handler.removeCallbacks(this);
 
-                    setDownloadSpeed(sm.getAverageDownloadSpeed());
+                    mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageDownloadSpeed()));
 
                     // delay between two tasks: download and upload
                     handler = new Handler();
@@ -170,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             cWave.attachColor(getColor(R.color.gold));
-
                             measureUploadSpeed();
+
                         }
                     }, TASK_DELAY);
 
@@ -194,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
                 if (i[0] < sm.uploadList.size()) {
 
                     Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.uploadList.get(i[0]), 2);
-                    setInstantSpeed(instSpeed);
+                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i[0]++;
                     handler.postDelayed(this, MEASURING_DELAY);
@@ -206,11 +192,13 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     handler.removeCallbacks(this);
 
-                    setUploadSpeed(sm.getAverageUploadSpeed());
-                    setPlayToActionBtn();
+                    mSubResults.setUploadSpeed(getSpeedString(sm.getAverageUploadSpeed()));
+                    actionBtn.setPlay();
 
-                    mHeader.enableButtonGroup();
-                    mHeader.showReturnBtn();
+                    String downloadSpeed = mSubResults.getDownloadSpeed();
+                    String uploadSpeed = mSubResults.getUploadSpeed();
+                    String ping = mCard.getPing();
+                    onResultUI(downloadSpeed, uploadSpeed, ping);
                 }
             }
         };
@@ -220,22 +208,63 @@ public class MainActivity extends AppCompatActivity {
     private void stopMeasuring() {
         Log.d("mytag", "stopSpeed: mock stopping");
 
-        setPlayToActionBtn();
+        actionBtn.setPlay();
+        mSubResults.setEmpty();
+
         handler.removeCallbacks(task);
     }
 
-
-    private void setInstantSpeed(Pair<Integer, Integer> speed) {
-        mCard.setIntegerSpeed(speed.first);
-        mCard.setFractionSpeed(speed.second);
+    private String getSpeedString(Pair<Integer, Integer> speed) {
+        return String.format("%d.%d", speed.first, speed.second);
     }
 
-    private void setDownloadSpeed(Pair<Integer, Integer> speed) {
-        mResults.setDownloadSpeed(String.format("%d.%d", speed.first, speed.second));
+    private void onResultUI(String downloadSpeed, String uploadSpeed, String ping) {
+
+        mSubResults.setVisibility(View.GONE);
+
+        mResults.setVisibility(View.VISIBLE);
+
+        mCard.setEmptyCaptions();
+        mCard.setMessage("Done");
+
+        mResults.setDownloadSpeed(downloadSpeed);
+        mResults.setUploadSpeed(uploadSpeed);
+        mResults.setPing(ping);
+
+        actionBtn.setRestart();
+
+        mHeader.showReturnBtn();
+
+        shareBtn.setVisibility(View.VISIBLE);
+        saveBtn.setVisibility(View.VISIBLE);
+
     }
 
-    private void setUploadSpeed(Pair<Integer, Integer> speed) {
-        mResults.setUploadSpeed(String.format("%d.%d", speed.first, speed.second));
+    public void onPlayUI() {
+        mCard.setVisibility(View.VISIBLE);
+        mCard.setDefaultCaptions();
+
+        cWave.attachColor(getColor(R.color.mint));
+
+        mSubResults.setVisibility(View.VISIBLE);
+        mSubResults.setEmpty();
+        mResults.setVisibility(View.GONE);
+
+        mHeader.setSectionName("Demonstration");
+        mHeader.disableButtonGroup();
+        mHeader.hideReturnBtn();
+
+        actionTV.setVisibility(View.GONE);
+        actionBtn.setStop();
+    }
+
+    public void onStopUI() {
+        mHeader.enableButtonGroup();
+        mHeader.showReturnBtn();
+
+        actionBtn.setPlay();
+
+        mSubResults.setEmpty();
     }
 
 }

@@ -1,6 +1,5 @@
 package com.example.wavemockapplication;
 
-import android.util.Log;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -26,8 +25,6 @@ public class SpeedManager {
 
     private Pair<Integer, Integer> convertBitToMbps(String speed) {
         if (speed != null) {
-
-//            speed = speed.substring(0, speed.length() - 3);
 
             int int_speed = Integer.parseInt(speed) / 1000000;
             int frac_speed = Integer.parseInt(speed) % 1000000;
@@ -78,4 +75,5 @@ public class SpeedManager {
     public Pair<Integer, Integer> getAverageDownloadSpeed() {
         return getAverageSpeed(downloadList);
     }
+
 }
