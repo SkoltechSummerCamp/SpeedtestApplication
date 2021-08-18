@@ -1,24 +1,21 @@
 package ru.scoltech.openran.speedtest
 
 import java.io.FileReader
-import java.util.concurrent.atomic.AtomicBoolean
 
 class IperfRunner(writableDir: String) {
+    private var processWaiterThread: Thread? = null
     private var inputHandlerThreads: List<Thread>? = null
-    private val iperfInRunning = AtomicBoolean(false)
+
     private val stdoutPipePath = "$writableDir/iperfStdout"
     private val stderrPipePath = "$writableDir/iperfStderr"
 
     var stdoutHandler: (String) -> Unit = {}
     var stderrHandler: (String) -> Unit = {}
+    var onFinishHandler: () -> Unit = {}
 
     fun start(args: String) {
-        stop()
         mkfifo(stdoutPipePath)
         mkfifo(stderrPipePath)
-
-        val argsArray = parseIperfArgs(args)
-        startJni(stdoutPipePath, stderrPipePath, argsArray)
 
         inputHandlerThreads = listOf(
             Triple(stdoutPipePath, "Stdout Handler", stdoutHandler),
@@ -32,37 +29,48 @@ class IperfRunner(writableDir: String) {
                 }
             }, name).also { it.start() }
         }
-        iperfInRunning.set(true)
 
+        val argsArray = splitArgs(args)
+        start(stdoutPipePath, stderrPipePath, argsArray)
+        processWaiterThread = Thread({
+            waitForProcess()
+            onFinish()
+        }, "Iperf Waiter")
+            .also { it.start() }
     }
 
-    private fun parseIperfArgs(args: String): Array<String> {
-        return args.split(Regex("\\s+")).filter { it.isNotBlank() }.toTypedArray()
+    private fun splitArgs(args: String): Array<String> {
+        return args.split(SPACES_REGEX).filter { it.isNotBlank() }.toTypedArray()
     }
 
-    fun stop() {
-        if (iperfInRunning.get()) {
-            exitJni()
-            inputHandlerThreads!!.forEach { it.interrupt() }
-            inputHandlerThreads!!.forEach { it.join() }
-            inputHandlerThreads = null
-            iperfInRunning.set(false)
+    private fun onFinish() {
+        inputHandlerThreads!!.forEach { it.interrupt() }
+        inputHandlerThreads!!.forEach { it.join() }
+        inputHandlerThreads = null
+
+        onFinishHandler()
+    }
+
+    fun killAndWait() {
+        if (processWaiterThread != null) {
+            sendSigInt()
+            processWaiterThread!!.join()
         }
     }
 
+    external fun sendSigInt()
+
+    external fun sendSigKill()
+
     private external fun mkfifo(pipePath: String)
 
-    private external fun startJni(
-        stdoutPipePath: String,
-        stderrPipePath: String,
-        args: Array<String>
-    ): Int
+    private external fun start(stdoutPipePath: String, stderrPipePath: String, args: Array<String>): Int
 
-    private external fun exitJni()
-
-    private external fun sendForceExitJni()
+    private external fun waitForProcess()
 
     companion object {
+        private val SPACES_REGEX = Regex("\\s+")
+
         init {
             System.loadLibrary("iperf2")
         }

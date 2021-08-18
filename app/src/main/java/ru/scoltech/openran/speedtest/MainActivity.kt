@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopIperf() {
-        iperfRunner.stop()
+        iperfRunner.killAndWait()
     }
 
     private fun runIcmpPingAsCommand() = runBlocking {

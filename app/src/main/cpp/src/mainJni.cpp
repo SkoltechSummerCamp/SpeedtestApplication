@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv);
 
-static pid_t iperfPid;
+static pid_t processPid;
 
 extern "C" JNIEXPORT void JNICALL
 Java_ru_scoltech_openran_speedtest_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath)
@@ -19,16 +19,21 @@ Java_ru_scoltech_openran_speedtest_IperfRunner_mkfifo(JNIEnv* env, jobject, jstr
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_exitJni(JNIEnv* env, jobject)
+Java_ru_scoltech_openran_speedtest_IperfRunner_waitForProcess(JNIEnv* env, jobject)
 {
-    kill(iperfPid, SIGINT);
-    waitpid(iperfPid, nullptr, 0);
+    waitpid(processPid, nullptr, 0);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_sendForceExitJni(JNIEnv* env, jobject)
+Java_ru_scoltech_openran_speedtest_IperfRunner_sendSigInt(JNIEnv* env, jobject)
 {
-    kill(iperfPid, SIGINT);
+    kill(processPid, SIGINT);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_ru_scoltech_openran_speedtest_IperfRunner_sendSigKill(JNIEnv* env, jobject)
+{
+    kill(processPid, SIGKILL);
 }
 
 int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
@@ -44,22 +49,17 @@ int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_startJni(JNIEnv* env, jobject, jstring jStdoutPipePath, jstring jStderrPipePath, jobjectArray args)
+Java_ru_scoltech_openran_speedtest_IperfRunner_start(JNIEnv* env, jobject, jstring jStdoutPipePath, jstring jStderrPipePath, jobjectArray args)
 {
-    int stdoutPipeFd;
-    int stderrPipeFd;
-    int argc;
-    char** argv;
-
-    iperfPid = fork();
-    if (iperfPid == -1) {
+    processPid = fork();
+    if (processPid == -1) {
         return -1;
-    } else if (iperfPid == 0) {
-        stdoutPipeFd = redirectFileToPipe(env, jStdoutPipePath, stdout);
-        stderrPipeFd = redirectFileToPipe(env, jStderrPipePath, stderr);
+    } else if (processPid == 0) {
+        int stdoutPipeFd = redirectFileToPipe(env, jStdoutPipePath, stdout);
+        int stderrPipeFd = redirectFileToPipe(env, jStderrPipePath, stderr);
 
-        argc = env->GetArrayLength(args) + 1;
-        argv = new char *[argc];
+        int argc = env->GetArrayLength(args) + 1;
+        char** argv = new char *[argc];
         argv[0] = "iperf";
         for (int i = 0; i < argc - 1; i++) {
             auto jArg = (jstring) (env->GetObjectArrayElement(args, i));
