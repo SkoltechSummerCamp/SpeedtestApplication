@@ -8,8 +8,17 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.Throws
 
+/**
+ * Iperf process runner.
+ *
+ * Creates named pipes in `writableDir` which are used to redirect iperf `stdout` and `stderr`.
+ * One can handle them by setting [stdoutHandler] and [stderrHandler].
+ * On finish [onFinishCallback] is called.
+ *
+ * Note, that [start] method kills previous iperf process with `SIGKILL` if it is still running.
+ */
 class IperfRunner(writableDir: String) {
-    /** Set to non null value if and only if process is running */
+    /** Set to non null value if and only if the process is running */
     private var processWaiterThread: Thread? = null
     private var processPid: Long = 0L
 
@@ -19,10 +28,31 @@ class IperfRunner(writableDir: String) {
     private val stdoutPipePath = "$writableDir/iperfStdout"
     private val stderrPipePath = "$writableDir/iperfStderr"
 
+    /** Function to which the process `stdout` will be redirected */
     var stdoutHandler: (String) -> Unit = {}
-    var stderrHandler: (String) -> Unit = {}
-    var onFinishHandler: () -> Unit = {}
 
+    /** Function to which the process `stderr` will be redirected */
+    var stderrHandler: (String) -> Unit = {}
+
+    /**
+     * Function that will be called on finish.
+     * Note that execution will be synchronized on the internal lock.
+     */
+    var onFinishCallback: () -> Unit = {}
+
+    /**
+     * Kills previous running process with `SIGKILL` (if any) and runs a new.
+     * Iperf process is created by
+     * [forking](https://man7.org/linux/man-pages/man2/fork.2.html) from current process.
+     * Communication between processes is done using
+     * [named pipes](https://man7.org/linux/man-pages/man3/mkfifo.3.html).
+     *
+     * @throws IperfException if `SIGKILL` could not be sent,
+     *                        named pipe could not be created
+     *                        or process could not be forked.
+     * @throws InterruptedException if thread was interrupted during waiting
+     *                              for previous process finish.
+     */
     @Throws(IperfException::class, InterruptedException::class)
     fun start(args: String) {
         lock.lock()
@@ -101,13 +131,22 @@ class IperfRunner(writableDir: String) {
             }
         }
 
-        onFinishHandler()
+        onFinishCallback()
         processWaiterThread = null
         processPid = 0
         finishedCondition.signalAll()
         lock.unlock()
     }
 
+    /**
+     * Kills current running process with `SIGINT` (if any) and waits until it finishes.
+     *
+     * @throws IperfException if `SIGINT` could not be sent.
+     * @throws InterruptedException if thread was interrupted during waiting.
+     * @see sendSigInt
+     * @see sendSigKill
+     * @see onFinishCallback
+     */
     @Throws(IperfException::class, InterruptedException::class)
     fun killAndWait() {
         lock.lock()
@@ -118,11 +157,21 @@ class IperfRunner(writableDir: String) {
         lock.unlock()
     }
 
+    /**
+     * Sends `SIGINT` to the process if it is running.
+     *
+     * @throws IperfException if signal could not be sent.
+     */
     @Throws(IperfException::class)
     fun sendSigInt() {
         kill("SIGINT", ::sendSigInt)
     }
 
+    /**
+     * Sends `SIGKILL` to the process if it is running.
+     *
+     * @throws IperfException if signal could not be sent.
+     */
     @Throws(IperfException::class)
     fun sendSigKill() {
         kill("SIGKILL", ::sendSigKill)
