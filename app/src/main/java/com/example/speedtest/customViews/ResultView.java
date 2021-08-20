@@ -1,11 +1,11 @@
-package com.example.wavemockapplication.CustomViews;
+package com.example.speedtest.customViews;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-import com.example.wavemockapplication.R;
+import com.example.speedtest.R;
 
 public class ResultView extends TableLayout {
 

@@ -1,4 +1,4 @@
-package com.example.wavemockapplication.Activities;
+package com.example.speedtest.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,16 +9,16 @@ import android.view.View;
 import android.widget.TextView;
 import android.os.Handler;
 
-import com.example.wavemockapplication.CustomButtons.ActionButton;
-import com.example.wavemockapplication.CustomButtons.SaveButton;
-import com.example.wavemockapplication.CustomButtons.ShareButton;
-import com.example.wavemockapplication.CustomViews.CardView;
-import com.example.wavemockapplication.CustomViews.HeaderView;
-import com.example.wavemockapplication.CustomViews.ResultView;
-import com.example.wavemockapplication.CustomViews.SubResultView;
-import com.example.wavemockapplication.R;
-import com.example.wavemockapplication.SpeedManager;
-import com.example.wavemockapplication.Wave;
+import com.example.speedtest.customButtons.ActionButton;
+import com.example.speedtest.customButtons.SaveButton;
+import com.example.speedtest.customButtons.ShareButton;
+import com.example.speedtest.customViews.CardView;
+import com.example.speedtest.customViews.HeaderView;
+import com.example.speedtest.customViews.ResultView;
+import com.example.speedtest.customViews.SubResultView;
+import com.example.speedtest.R;
+import com.example.speedtest.SpeedManager;
+import com.example.speedtest.Wave;
 import com.opencsv.CSVReader;
 
 import java.io.IOException;
@@ -120,20 +120,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void measureDownloadSpeed() {
 
-        final int[] i = {0};
-
         handler = new Handler();
         task = new Runnable() {
+            int i = 0;
+
             @Override
             public void run() {
-                Log.d("mytag", "Doing task download" + i[0]);
+                Log.d("mytag", "Doing task download" + i);
 
-                if (i[0] < sm.getDownloadList().size()) {
+                if (i < sm.getDownloadList().size()) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadList().get(i[0]), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadList().get(i), 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
-                    i[0]++;
+                    i++;
                     handler.postDelayed(this, MEASURING_DELAY);
 
                     //animation
@@ -148,16 +148,12 @@ public class MainActivity extends AppCompatActivity {
 
                     // delay between two tasks: download and upload
                     handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
+                    handler.postDelayed(() -> {
 
-                            cWave.attachColor(getColor(R.color.gold));
-                            measureUploadSpeed();
+                        cWave.attachColor(getColor(R.color.gold));
+                        measureUploadSpeed();
 
-                        }
                     }, TASK_DELAY);
-
                 }
             }
         };
@@ -166,20 +162,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void measureUploadSpeed() {
 
-        final int[] i = {0};
 
         handler = new Handler();
         task = new Runnable() {
+            int i = 0;
+
             @Override
             public void run() {
-                Log.d("mytag", "Doing task upload" + i[0]);
+                Log.d("mytag", "Doing task upload" + i);
 
-                if (i[0] < sm.getUploadList().size()) {
+                if (i < sm.getUploadList().size()) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadList().get(i[0]), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadList().get(i), 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
-                    i[0]++;
+                    i++;
                     handler.postDelayed(this, MEASURING_DELAY);
 
                     //animation

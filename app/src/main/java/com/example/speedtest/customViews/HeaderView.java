@@ -1,4 +1,4 @@
-package com.example.wavemockapplication.CustomViews;
+package com.example.speedtest.customViews;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,8 +10,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.wavemockapplication.Activities.MainActivity;
-import com.example.wavemockapplication.R;
+import com.example.speedtest.activities.MainActivity;
+import com.example.speedtest.R;
 
 
 public class HeaderView extends LinearLayout {
@@ -87,11 +87,10 @@ public class HeaderView extends LinearLayout {
                     setSectionName(sectionNameStr);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             typedArray.recycle();
         }
+
     }
 
     //TODO global: check if it efficient way to go to main menu, especially from the same activity

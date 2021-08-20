@@ -1,4 +1,4 @@
-package com.example.wavemockapplication.CustomViews;
+package com.example.speedtest.customViews;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -6,8 +6,8 @@ import android.util.AttributeSet;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.wavemockapplication.R;
-import com.example.wavemockapplication.Wave;
+import com.example.speedtest.R;
+import com.example.speedtest.Wave;
 
 public class CardView extends LinearLayout {
 
@@ -61,8 +61,6 @@ public class CardView extends LinearLayout {
                     setStatus(mStatus);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             typedArray.recycle();
         }

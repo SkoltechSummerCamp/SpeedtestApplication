@@ -1,4 +1,4 @@
-package com.example.wavemockapplication;
+package com.example.speedtest;
 
 import android.util.Pair;
 

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Activities.MainActivity">
+    tools:context=".activities.MainActivity">
 
 
     <LinearLayout
@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <com.example.wavemockapplication.CustomViews.HeaderView
+        <com.example.speedtest.customViews.HeaderView
             android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
             app:is_active_button_group="true"
             app:section_name="SpeedTest 5G" />
 
-        <com.example.wavemockapplication.CustomViews.CardView
+        <com.example.speedtest.customViews.CardView
             android:id="@+id/card"
 
             android:layout_width="wrap_content"
@@ -31,7 +31,7 @@
 
             android:visibility="gone" />
 
-        <com.example.wavemockapplication.CustomViews.ResultView
+        <com.example.speedtest.customViews.ResultView
 
             android:id="@+id/result"
 
@@ -46,7 +46,7 @@
             android:layout_marginEnd="20dp"
             android:visibility="gone" />
 
-        <com.example.wavemockapplication.CustomViews.SubResultView
+        <com.example.speedtest.customViews.SubResultView
             android:id="@+id/subresult"
 
             android:layout_width="match_parent"
@@ -75,13 +75,13 @@
             android:gravity="center"
             android:orientation="horizontal">
 
-            <com.example.wavemockapplication.CustomButtons.SaveButton
+            <com.example.speedtest.customButtons.SaveButton
                 android:id="@+id/save_btn"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:visibility="gone" />
 
-            <com.example.wavemockapplication.CustomButtons.ActionButton
+            <com.example.speedtest.customButtons.ActionButton
                 android:id="@+id/action_btn"
 
                 android:layout_width="100dp"
@@ -96,7 +96,7 @@
                 android:contentDescription="@string/start"
                 android:onClick="onClick" />
 
-            <com.example.wavemockapplication.CustomButtons.ShareButton
+            <com.example.speedtest.customButtons.ShareButton
                 android:id="@+id/share_btn"
                 android:layout_width="60dp"
                 android:layout_height="60dp"

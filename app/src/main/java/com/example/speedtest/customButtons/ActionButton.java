@@ -1,9 +1,9 @@
-package com.example.wavemockapplication.CustomButtons;
+package com.example.speedtest.customButtons;
 
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.example.wavemockapplication.R;
+import com.example.speedtest.R;
 
 public class ActionButton extends androidx.appcompat.widget.AppCompatButton {
     //current state is at the content description attr
