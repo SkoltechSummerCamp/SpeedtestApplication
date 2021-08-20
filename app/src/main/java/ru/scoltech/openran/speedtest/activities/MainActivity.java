@@ -1,4 +1,4 @@
-package com.example.speedtest.activities;
+package ru.scoltech.openran.speedtest.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,16 +9,16 @@ import android.view.View;
 import android.widget.TextView;
 import android.os.Handler;
 
-import com.example.speedtest.customButtons.ActionButton;
-import com.example.speedtest.customButtons.SaveButton;
-import com.example.speedtest.customButtons.ShareButton;
-import com.example.speedtest.customViews.CardView;
-import com.example.speedtest.customViews.HeaderView;
-import com.example.speedtest.customViews.ResultView;
-import com.example.speedtest.customViews.SubResultView;
-import com.example.speedtest.R;
-import com.example.speedtest.SpeedManager;
-import com.example.speedtest.Wave;
+import ru.scoltech.openran.speedtest.customButtons.ActionButton;
+import ru.scoltech.openran.speedtest.customButtons.SaveButton;
+import ru.scoltech.openran.speedtest.customButtons.ShareButton;
+import ru.scoltech.openran.speedtest.customViews.CardView;
+import ru.scoltech.openran.speedtest.customViews.HeaderView;
+import ru.scoltech.openran.speedtest.customViews.ResultView;
+import ru.scoltech.openran.speedtest.customViews.SubResultView;
+import ru.scoltech.openran.speedtest.R;
+import ru.scoltech.openran.speedtest.SpeedManager;
+import ru.scoltech.openran.speedtest.Wave;
 import com.opencsv.CSVReader;
 
 import java.io.IOException;

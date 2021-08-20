@@ -1,11 +1,11 @@
-package com.example.speedtest.customButtons;
+package ru.scoltech.openran.speedtest.customButtons;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import com.example.speedtest.R;
+import ru.scoltech.openran.speedtest.R;
 
 public class SaveButton extends androidx.appcompat.widget.AppCompatButton {
     public SaveButton(Context context, AttributeSet attrs) {

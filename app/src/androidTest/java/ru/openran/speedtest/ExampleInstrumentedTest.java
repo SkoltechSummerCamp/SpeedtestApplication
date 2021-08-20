@@ -1,4 +1,4 @@
-package com.example.speedtest;
+package ru.openran.speedtest;
 
 import android.content.Context;
 

@@ -74,7 +74,7 @@
 
     </LinearLayout>
 
-    <com.example.speedtest.Wave
+    <ru.scoltech.openran.speedtest.Wave
         android:id="@+id/progress_wave"
         android:layout_width="match_parent"
         android:layout_height="70dp"

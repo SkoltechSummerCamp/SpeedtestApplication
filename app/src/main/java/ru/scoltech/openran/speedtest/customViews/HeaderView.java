@@ -1,4 +1,4 @@
-package com.example.speedtest.customViews;
+package ru.scoltech.openran.speedtest.customViews;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,8 +10,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.speedtest.activities.MainActivity;
-import com.example.speedtest.R;
+import ru.scoltech.openran.speedtest.activities.MainActivity;
+import ru.scoltech.openran.speedtest.R;
 
 
 public class HeaderView extends LinearLayout {
