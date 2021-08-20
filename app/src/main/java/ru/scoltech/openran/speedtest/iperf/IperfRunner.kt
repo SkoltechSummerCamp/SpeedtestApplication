@@ -3,13 +3,18 @@ package ru.scoltech.openran.speedtest.iperf
 import android.util.Log
 import kotlinx.coroutines.*
 import java.io.*
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.Throws
 
 class IperfRunner(writableDir: String) {
-    @Volatile
+    /** Set to non null value if and only if process is running */
     private var processWaiterThread: Thread? = null
-    @Volatile
     private var processPid: Long = 0L
+
+    private val lock: Lock = ReentrantLock()
+    private val finishedCondition: Condition = lock.newCondition()
 
     private val stdoutPipePath = "$writableDir/iperfStdout"
     private val stderrPipePath = "$writableDir/iperfStderr"
@@ -18,8 +23,14 @@ class IperfRunner(writableDir: String) {
     var stderrHandler: (String) -> Unit = {}
     var onFinishHandler: () -> Unit = {}
 
-    @Throws(IperfException::class)
+    @Throws(IperfException::class, InterruptedException::class)
     fun start(args: String) {
+        lock.lock()
+        if (processWaiterThread != null) {
+            sendSigKill()
+            finishedCondition.await()
+        }
+
         forceMkfifo(stdoutPipePath, "stdout")
         forceMkfifo(stderrPipePath, "stderr")
 
@@ -37,10 +48,11 @@ class IperfRunner(writableDir: String) {
         }
 
         processWaiterThread = Thread({
-            waitForProcess(processPid)
+            waitForProcessNoDestroy(processPid)
             onFinish(outputHandlers)
         }, "Iperf Waiter")
             .also { it.start() }
+        lock.unlock()
     }
 
     private fun forceMkfifo(path: String, redirectingFile: String) {
@@ -80,6 +92,9 @@ class IperfRunner(writableDir: String) {
     }
 
     private fun onFinish(outputHandlers: List<Job>) {
+        lock.lock()
+        waitForProcess(processPid)
+
         runBlocking {
             outputHandlers.forEach {
                 it.join()
@@ -87,26 +102,38 @@ class IperfRunner(writableDir: String) {
         }
 
         onFinishHandler()
+        processWaiterThread = null
+        processPid = 0
+        finishedCondition.signalAll()
+        lock.unlock()
     }
 
-    @Throws(IperfException::class)
+    @Throws(IperfException::class, InterruptedException::class)
     fun killAndWait() {
-        // TODO set null on end
-        // TODO synchronize on `processWaiterThread` and `processPid`
+        lock.lock()
         if (processWaiterThread != null) {
             sendSigInt()
-            processWaiterThread!!.join()
+            finishedCondition.await()
         }
+        lock.unlock()
     }
 
     @Throws(IperfException::class)
     fun sendSigInt() {
-        runCheckingErrno(getKillErrorMessage("SIGINT")) { sendSigInt(processPid) }
+        kill("SIGINT", ::sendSigInt)
     }
 
     @Throws(IperfException::class)
     fun sendSigKill() {
-        runCheckingErrno(getKillErrorMessage("SIGKILL")) { sendSigKill(processPid) }
+        kill("SIGKILL", ::sendSigKill)
+    }
+
+    private fun kill(signalName: String, sendSignal: (Long) -> Int) {
+        lock.lock()
+        if (processWaiterThread != null) {
+            runCheckingErrno(getKillErrorMessage(signalName)) { sendSignal(processPid) }
+        }
+        lock.unlock()
     }
 
     private fun getMkfifoErrorMessage(pipePath: String, redirectingFile: String) =
@@ -135,7 +162,9 @@ class IperfRunner(writableDir: String) {
         pidHolder: LongArray,
     ): Int
 
-    private external fun waitForProcess(pid: Long)
+    private external fun waitForProcessNoDestroy(pid: Long) : Int
+
+    private external fun waitForProcess(pid: Long): Int
 
     companion object {
         private val SPACES_REGEX = Regex("\\s+")
