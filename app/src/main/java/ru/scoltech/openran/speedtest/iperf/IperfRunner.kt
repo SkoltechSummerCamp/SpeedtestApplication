@@ -1,8 +1,9 @@
-package ru.scoltech.openran.speedtest
+package ru.scoltech.openran.speedtest.iperf
 
 import android.util.Log
 import kotlinx.coroutines.*
 import java.io.*
+import kotlin.jvm.Throws
 
 class IperfRunner(writableDir: String) {
     @Volatile
@@ -17,29 +18,41 @@ class IperfRunner(writableDir: String) {
     var stderrHandler: (String) -> Unit = {}
     var onFinishHandler: () -> Unit = {}
 
+    @Throws(IperfException::class)
     fun start(args: String) {
-        // TODO throw on error
-        mkfifo(stdoutPipePath)
-        // TODO throw on error
-        mkfifo(stderrPipePath)
+        forceMkfifo(stdoutPipePath, "stdout")
+        forceMkfifo(stderrPipePath, "stderr")
+
+        val pidHolder = longArrayOf(0)
+        runCheckingErrno("Could not fork process and launch iperf") {
+            start(stdoutPipePath, stderrPipePath, splitArgs(args), pidHolder)
+        }
+        processPid = pidHolder[0]
 
         val outputHandlers = listOf(
+            stderrPipePath to stderrHandler,
             stdoutPipePath to stdoutHandler,
-            stderrPipePath to stderrHandler
         ).map { (pipePath, handler) ->
             CoroutineScope(Dispatchers.IO).launch { handlePipe(pipePath, handler) }
         }
-
-        val pidHolder = longArrayOf(0)
-        // TODO error "could not fork"
-        val returnCode = start(stdoutPipePath, stderrPipePath, splitArgs(args), pidHolder)
-        processPid = pidHolder[0]
 
         processWaiterThread = Thread({
             waitForProcess(processPid)
             onFinish(outputHandlers)
         }, "Iperf Waiter")
             .also { it.start() }
+    }
+
+    private fun forceMkfifo(path: String, redirectingFile: String) {
+        val previousFile = File(path)
+        previousFile.delete()
+        if (previousFile.exists()) {
+            val type = if (previousFile.isDirectory) "directory" else "file"
+            throw IperfException("Could not delete $type $path to create named pipe")
+        }
+        runCheckingErrno(getMkfifoErrorMessage(path, redirectingFile)) {
+            mkfifo(path)
+        }
     }
 
     private fun handlePipe(pipePath: String, handler: (String) -> Unit) {
@@ -56,10 +69,9 @@ class IperfRunner(writableDir: String) {
                     }
                 }
         } catch (e: IOException) {
-            val buffer = StringWriter()
-            e.printStackTrace(PrintWriter(buffer))
-            Log.e(LOG_TAG, "Could not handle iperf output: $buffer")
-            stderrHandler(buffer.toString())
+            val message = "Could not handle iperf output"
+            Log.e(LOG_TAG, message, e)
+            stderrHandler("$message: ${e::class.simpleName} (${e.message})")
         }
     }
 
@@ -77,6 +89,7 @@ class IperfRunner(writableDir: String) {
         onFinishHandler()
     }
 
+    @Throws(IperfException::class)
     fun killAndWait() {
         // TODO set null on end
         // TODO synchronize on `processWaiterThread` and `processPid`
@@ -86,17 +99,27 @@ class IperfRunner(writableDir: String) {
         }
     }
 
+    @Throws(IperfException::class)
     fun sendSigInt() {
-        kill(::sendSigInt)
+        runCheckingErrno(getKillErrorMessage("SIGINT")) { sendSigInt(processPid) }
     }
 
+    @Throws(IperfException::class)
     fun sendSigKill() {
-        kill(::sendSigKill)
+        runCheckingErrno(getKillErrorMessage("SIGKILL")) { sendSigKill(processPid) }
     }
 
-    private inline fun kill(block: (Long) -> Unit) {
-        // TODO throw on error
-        block(processPid)
+    private fun getMkfifoErrorMessage(pipePath: String, redirectingFile: String) =
+        "Could not create named pipe $pipePath for redirecting $redirectingFile"
+
+    private fun getKillErrorMessage(signalName: String) =
+        "Could not send $signalName to a process with pid $processPid"
+
+    private inline fun runCheckingErrno(errorMessage: String, block: () -> Int) {
+        val errno = block()
+        if (errno != 0) {
+            throw IperfException(errorMessage, errno)
+        }
     }
 
     private external fun sendSigInt(pid: Long): Int

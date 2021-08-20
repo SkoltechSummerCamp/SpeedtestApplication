@@ -11,7 +11,7 @@
 int main(int argc, char **argv);
 
 extern "C" JNIEXPORT int JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath)
+Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_mkfifo(JNIEnv* env, jobject, jstring jPipePath)
 {
     const char* pipePath = env->GetStringUTFChars(jPipePath, nullptr);
     int code = mkfifo(pipePath, 0777);
@@ -20,19 +20,19 @@ Java_ru_scoltech_openran_speedtest_IperfRunner_mkfifo(JNIEnv* env, jobject, jstr
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_waitForProcess(__unused JNIEnv* env, jobject, jlong pid)
+Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_waitForProcess(__unused JNIEnv* env, jobject, jlong pid)
 {
     waitpid(static_cast<pid_t>(pid), nullptr, 0);
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_sendSigInt(__unused JNIEnv* env, jobject, jlong pid)
+Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_sendSigInt(__unused JNIEnv* env, jobject, jlong pid)
 {
     return kill(static_cast<pid_t>(pid), SIGINT) == 0 ? 0 : errno;
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_sendSigKill(__unused JNIEnv* env, jobject, jlong pid)
+Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_sendSigKill(__unused JNIEnv* env, jobject, jlong pid)
 {
     return kill(static_cast<pid_t>(pid), SIGKILL) == 0 ? 0 : errno;
 }
@@ -52,7 +52,7 @@ int redirectFileToPipe(JNIEnv* env, jstring jPipePath, FILE* file)
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_ru_scoltech_openran_speedtest_IperfRunner_start(
+Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_start(
         JNIEnv* env,
         jobject,
         jstring jStdoutPipePath,
