@@ -22,7 +22,7 @@ Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_mkfifo(JNIEnv* env, jobject
 extern "C" JNIEXPORT int JNICALL
 Java_ru_scoltech_openran_speedtest_iperf_IperfRunner_waitForProcessNoDestroy(__unused JNIEnv* env, jobject, jlong pid)
 {
-    return waitid(P_PID, static_cast<id_t>(pid), nullptr, WNOWAIT) == -1 ? errno : 0;
+    return waitid(P_PID, static_cast<id_t>(pid), nullptr, WEXITED | WNOWAIT) == -1 ? errno : 0; // NOLINT(hicpp-signed-bitwise)
 }
 
 extern "C" JNIEXPORT int JNICALL
