@@ -3,344 +3,109 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="#f4f4f4"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent"
+    tools:context=".Activities.MainActivity">
 
-    <ScrollView
+
+    <LinearLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#2C2727">
+        android:orientation="vertical">
+
+        <ru.scoltech.openran.speedtest.CustomViews.HeaderView
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:is_active_back="false"
+            app:is_active_button_group="true"
+            app:section_name="SpeedTest 5G" />
+
+        <ru.scoltech.openran.speedtest.CustomViews.CardView
+            android:id="@+id/card"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="30dp"
+
+            android:visibility="gone" />
+
+        <ru.scoltech.openran.speedtest.CustomViews.ResultView
+
+            android:id="@+id/result"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="center"
+
+            android:layout_marginStart="20dp"
+
+            android:layout_marginTop="30dp"
+            android:layout_marginEnd="20dp"
+            android:visibility="gone" />
+
+        <ru.scoltech.openran.speedtest.CustomViews.SubResultView
+            android:id="@+id/subresult"
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/action_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="center"
+            android:layout_marginTop="130dp"
+
+            android:text="@string/tap_to_start_session" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#f4f4f4"
-            android:focusable="true"
-            android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/simple_ping"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            <ru.scoltech.openran.speedtest.CustomButtons.SaveButton
+                android:id="@+id/save_btn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:visibility="gone" />
 
-                <LinearLayout
-                    android:id="@+id/pingLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+            <ru.scoltech.openran.speedtest.CustomButtons.ActionButton
+                android:id="@+id/action_btn"
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
+                android:layout_width="100dp"
+                android:layout_height="100dp"
 
-                        <TextView
-                            android:id="@+id/ipLabel"
-                            android:layout_width="64dp"
-                            android:layout_height="45dp"
-                            android:layout_weight="1"
-                            android:text="@string/ipLabel"
-                            android:textAlignment="viewEnd"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                        <EditText
-                            android:id="@+id/serverIP"
-                            android:layout_width="342dp"
-                            android:layout_height="wrap_content"
-                            android:ems="10"
-                            android:inputType="textPersonName" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="65dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/Ping"
-                            android:layout_width="25dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:text="@string/pingLabel"
-                            android:textAlignment="textEnd"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                        <TextView
-                            android:id="@+id/pingValue"
-                            android:layout_width="7dp"
-                            android:layout_height="41dp"
-                            android:layout_weight="1"
-                            android:text="@string/noneVal"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                        <Button
-                            android:id="@+id/pingUDPButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:backgroundTint="#0f62fe"
-                            android:text="@string/udpPing" />
-
-                        <Space
-                            android:layout_width="5dp"
-                            android:layout_height="wrap_content" />
-
-                        <Button
-                            android:id="@+id/icmpPingButton"
-                            android:layout_width="132dp"
-                            android:layout_height="wrap_content"
-                            android:backgroundTint="#0f62fe"
-                            android:text="@string/icmpPing"
-                            tools:ignore="TextContrastCheck" />
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/pingServerButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.85"
-                        android:backgroundTint="#0f62fe"
-                        android:text="@string/startUdpPingServer" />
-
-                </LinearLayout>
-
-                <ImageButton
-                    android:id="@+id/expandButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#8d8d8d "
-                    app:srcCompat="@android:drawable/arrow_down_float"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/deviceInfoLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/divice_information"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                <LinearLayout
-                    android:id="@+id/deviceInfoLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <androidx.core.widget.NestedScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="102dp"
-                        android:fillViewport="true">
-
-                        <TextView
-                            android:id="@+id/ipInfo"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="10dp"
-                            android:scrollbars="vertical" />
-                    </androidx.core.widget.NestedScrollView>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <Space
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1" />
-
-                        <Button
-                            android:id="@+id/refreshButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:backgroundTint="#0f62fe"
-                            android:minHeight="48dp"
-                            android:text="@string/refreshIp" />
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="wrap_content" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <ImageButton
-                    android:id="@+id/expandButton2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#8d8d8d "
-                    app:srcCompat="@android:drawable/arrow_down_float" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="75dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="20dp"
 
 
-                <TextView
-                    android:id="@+id/iperfMobileLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:text="@string/iperf_mobile"
-                    android:textAlignment="center"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:background="@drawable/ic_start_btn"
 
-                <EditText
-                    android:id="@+id/iperfArgs"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".5"
-                    android:ems="10"
-                    android:importantForAutofill="no"
+                android:contentDescription="@string/start"
+                android:onClick="onClick" />
 
-                    android:inputType="textPersonName" />
+            <ru.scoltech.openran.speedtest.CustomButtons.ShareButton
+                android:id="@+id/share_btn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:visibility="gone" />
 
-            </LinearLayout>
-
-            <View
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?android:attr/listDivider" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="75dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-
-                <TextView
-                    android:id="@+id/serverIPLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:text="@string/server_ip"
-                    android:textAlignment="center"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                <EditText
-                    android:id="@+id/serverIpField"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".5"
-                    android:ems="10"
-                    android:importantForAutofill="no"
-
-                    android:inputType="textPersonName" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight=".5"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:text="@string/iperfServer"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-                <EditText
-                    android:id="@+id/serverArgs"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".5"
-                    android:ems="10"
-                    android:importantForAutofill="no"
-
-                    android:inputType="textPersonName" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="85dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.85" />
-
-                <Switch
-                    android:id="@+id/thisISserver"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.85"
-                    android:text="@string/thisIsServer"
-                    android:textAlignment="textEnd" />
-
-                <Button
-                    android:id="@+id/startStopButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.15"
-                    android:backgroundTint="#0f62fe"
-                    android:text="@string/startIperf" />
-
-            </LinearLayout>
-
-            <androidx.core.widget.NestedScrollView
-                android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:background="#2C2727"
-                android:backgroundTint="#2C2727"
-                android:fillViewport="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#2C2727"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/iperfOutput"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="#2C2727"
-                        android:fadeScrollbars="false"
-                        android:foregroundGravity="bottom"
-                        android:gravity="bottom"
-                        android:isScrollContainer="false"
-                        android:maxLines="@android:integer/status_bar_notification_info_maxnum"
-                        android:nestedScrollingEnabled="false"
-                        android:overScrollMode="always"
-                        android:padding="10dp"
-                        android:scrollbarStyle="outsideInset"
-                        android:scrollbars="vertical"
-                        android:textColor="#BFB7B7"
-                        android:verticalScrollbarPosition="right" />
-
-                </LinearLayout>
-            </androidx.core.widget.NestedScrollView>
 
         </LinearLayout>
-    </ScrollView>
+
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

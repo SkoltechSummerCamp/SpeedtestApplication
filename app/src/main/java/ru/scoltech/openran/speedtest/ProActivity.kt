@@ -5,16 +5,16 @@ import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import androidx.core.view.isVisible
-import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
+import ru.scoltech.openran.speedtest.databinding.ActivityProBinding
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
 import java.net.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MainActivity : AppCompatActivity() {
+class ProActivity : AppCompatActivity() {
 
 
-    lateinit var binding: ActivityMainBinding
+    lateinit var binding: ActivityProBinding
     lateinit var iperfRunner: IperfRunner
 
     @Volatile
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityProBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.refreshButton.setOnClickListener {
             refreshAddresses()
