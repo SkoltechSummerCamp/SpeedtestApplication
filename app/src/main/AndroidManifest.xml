@@ -11,7 +11,14 @@
         android:roundIcon="@mipmap/ic_speed_test_app_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SpeedtestApplication">
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.DevActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".activities.DemoActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

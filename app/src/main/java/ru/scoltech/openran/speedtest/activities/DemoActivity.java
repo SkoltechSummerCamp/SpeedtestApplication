@@ -1,14 +1,25 @@
 package ru.scoltech.openran.speedtest.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
-import android.os.Handler;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import ru.scoltech.openran.speedtest.R;
+import ru.scoltech.openran.speedtest.SpeedManager;
+import ru.scoltech.openran.speedtest.Wave;
 import ru.scoltech.openran.speedtest.customButtons.ActionButton;
 import ru.scoltech.openran.speedtest.customButtons.SaveButton;
 import ru.scoltech.openran.speedtest.customButtons.ShareButton;
@@ -16,19 +27,9 @@ import ru.scoltech.openran.speedtest.customViews.CardView;
 import ru.scoltech.openran.speedtest.customViews.HeaderView;
 import ru.scoltech.openran.speedtest.customViews.ResultView;
 import ru.scoltech.openran.speedtest.customViews.SubResultView;
-import ru.scoltech.openran.speedtest.R;
-import ru.scoltech.openran.speedtest.SpeedManager;
-import ru.scoltech.openran.speedtest.Wave;
-import com.opencsv.CSVReader;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 
-public class MainActivity extends AppCompatActivity {
+public class DemoActivity extends AppCompatActivity {
 
     Wave cWave;
     CardView mCard;
@@ -56,8 +57,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Objects.requireNonNull(getSupportActionBar()).hide();
-        setContentView(R.layout.activity_main);
+        if (getSupportActionBar() != null)
+            getSupportActionBar().hide();
+        setContentView(R.layout.activity_demo);
 
         init();
 
@@ -111,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 records.add(values[8]);
             }
 
-        } catch (IOException e) {
+        } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
         }
         return records;

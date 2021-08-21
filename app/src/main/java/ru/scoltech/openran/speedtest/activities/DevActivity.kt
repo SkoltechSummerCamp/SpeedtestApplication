@@ -1,20 +1,21 @@
-package ru.scoltech.openran.speedtest
+package ru.scoltech.openran.speedtest.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import androidx.core.view.isVisible
-import ru.scoltech.openran.speedtest.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
+import ru.scoltech.openran.speedtest.*
+import ru.scoltech.openran.speedtest.databinding.ActivityDevBinding
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
 import java.net.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MainActivity : AppCompatActivity() {
+class DevActivity : AppCompatActivity() {
 
 
-    lateinit var binding: ActivityMainBinding
+    lateinit var binding: ActivityDevBinding
     lateinit var iperfRunner: IperfRunner
 
     @Volatile
@@ -31,7 +32,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityDevBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.refreshButton.setOnClickListener {
             refreshAddresses()

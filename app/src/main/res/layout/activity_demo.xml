@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.MainActivity">
+    tools:context="ru.scoltech.openran.speedtest.activities.DemoActivity">
 
 
     <LinearLayout
@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
 
         <ru.scoltech.openran.speedtest.customViews.HeaderView
             android:id="@+id/header"

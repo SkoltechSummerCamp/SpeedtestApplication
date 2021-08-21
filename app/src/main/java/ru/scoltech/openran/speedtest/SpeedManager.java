@@ -1,5 +1,4 @@
 package ru.scoltech.openran.speedtest;
-
 import android.util.Pair;
 
 import java.util.ArrayList;
