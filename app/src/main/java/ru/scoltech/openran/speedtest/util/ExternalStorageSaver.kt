@@ -36,7 +36,7 @@ class ExternalStorageSaver(private val activity: Activity) {
 
 
     private fun isStoragePermissionGranted(): Boolean {
-        return if (Build.VERSION.SDK_INT >= 24) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED
             ) {
