@@ -31,28 +31,27 @@ import ru.scoltech.openran.speedtest.customViews.SubResultView;
 
 public class DemoActivity extends AppCompatActivity {
 
-    Wave cWave;
-    CardView mCard;
-    SubResultView mSubResults; // in progress result
-    HeaderView mHeader;
-    ResultView mResults; // after finishing
+    private Wave cWave;
+    private CardView mCard;
+    private SubResultView mSubResults; // in progress result
+    private HeaderView mHeader;
+    private ResultView mResults; // after finishing
 
-    //TODO global: merge SubResultView and ResultView and load only different xml
-    //TODO global: replace visibility changing with adding and removing components from the view
+    //TODO global: reorganise view operating
 
     //action elem
-    ActionButton actionBtn;
-    TextView actionTV;
-    ShareButton shareBtn;
-    SaveButton saveBtn;
+    private ActionButton actionBtn;
+    private TextView actionTV;
+    private ShareButton shareBtn;
+    private SaveButton saveBtn;
 
-    SpeedManager sm;
+    private SpeedManager sm;
 
-    Handler handler;
-    Runnable task;
+    private Handler handler;
+    private Runnable task;
 
-    final static int MEASURING_DELAY = 200;
-    final static int TASK_DELAY = 1000;
+    private final static int MEASURING_DELAY = 200;
+    private final static int TASK_DELAY = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,11 +128,11 @@ public class DemoActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                Log.d("mytag", "Doing task download" + i);
+                Log.d("MEASURE", "Doing task download" + i);
 
-                if (i < sm.getDownloadList().size()) {
+                if (i < sm.getDownloadArray().length) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadList().get(i), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadArray()[i], 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i++;
@@ -172,11 +171,11 @@ public class DemoActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                Log.d("mytag", "Doing task upload" + i);
+                Log.d("MEASURE", "Doing task upload" + i);
 
-                if (i < sm.getUploadList().size()) {
+                if (i < sm.getUploadArray().length) {
 
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadList().get(i), 2);
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadArray()[i], 2);
                     mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
                     i++;
@@ -203,7 +202,7 @@ public class DemoActivity extends AppCompatActivity {
     }
 
     private void stopMeasuring() {
-        Log.d("mytag", "stopSpeed: mock stopping");
+        Log.d("MEASURE", "stopSpeed: mock stopping");
 
         actionBtn.setPlay();
         mSubResults.setEmpty();

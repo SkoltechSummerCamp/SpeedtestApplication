@@ -19,9 +19,9 @@ public class CardView extends LinearLayout {
     private TextView mbpsCaption;
     private TextView pingCaption;
 
-    Wave mWave;
+    private Wave mWave;
 
-    String mStatus;
+    private String mStatus;
 
 
     public CardView(Context context, AttributeSet attrs) {
@@ -83,8 +83,6 @@ public class CardView extends LinearLayout {
         fractionSpeedTV.setText(String.valueOf(speed));
     }
 
-    private void setDrawableStatus() {
-    }
 
     public void setInstantSpeed(int integerSpeed, int fractionSpeed) {
         setFractionSpeed(fractionSpeed);

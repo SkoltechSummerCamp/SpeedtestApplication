@@ -36,7 +36,7 @@ public class SaveButton extends androidx.appcompat.widget.AppCompatButton {
     }
 
     private void saveTask(Activity activity, Bitmap bitmap) {
-        Log.d("mytag", "saveTask: pressed save");
+        Log.d("SAVE_BUTTON", "saveTask: pressed save");
 
         if (new ExternalStorageSaver(activity).save(createFile(activity), bitmap)) {
             Toast.makeText(activity, "Successfully saved image", Toast.LENGTH_SHORT).show();
@@ -44,10 +44,7 @@ public class SaveButton extends androidx.appcompat.widget.AppCompatButton {
     }
 
     private File createFile(Context context) {
-        File dir = new File(Environment.getExternalStorageDirectory()
-                + "/Android/data/"
-                + context.getApplicationContext().getPackageName()
-                + "/Files");
+        File dir = new File(String.valueOf(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)));
 
         String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm", Locale.ROOT).format(new Date());
         String imageName = "test_" + timeStamp + ".jpg";

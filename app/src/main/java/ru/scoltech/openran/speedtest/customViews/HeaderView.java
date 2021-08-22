@@ -17,10 +17,6 @@ import ru.scoltech.openran.speedtest.activities.DevActivity;
 
 public class HeaderView extends LinearLayout {
 
-    private boolean isActiveReturnBtn;
-    private boolean isActiveButtonGroup;
-    private String sectionNameStr;
-
     private Button returnBtn;
     private Button historyBtn;
     private Button modeBtn;
@@ -36,23 +32,11 @@ public class HeaderView extends LinearLayout {
 
         parseAttrs(context, attrs);
 
-        returnBtn.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                goToStart(v.getContext());
-            }
-        });
+        returnBtn.setOnClickListener(v -> goToStart(v.getContext()));
 
-        historyBtn.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                goToHistory(v.getContext());
-            }
-        });
+        historyBtn.setOnClickListener(v -> goToHistory(v.getContext()));
 
-        modeBtn.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                goToDev(v.getContext());
-            }
-        });
+        modeBtn.setOnClickListener(v -> goToDev(v.getContext()));
     }
 
     private void init() {
@@ -73,17 +57,17 @@ public class HeaderView extends LinearLayout {
                 int attr = typedArray.getIndex(i);
 
                 if (attr == R.styleable.HeaderView_is_active_back) {
-                    isActiveReturnBtn = typedArray.getBoolean(attr, false);
+                    boolean isActiveReturnBtn = typedArray.getBoolean(attr, false);
 
                     changeVisibilityReturnBtn(isActiveReturnBtn);
 
                 } else if (attr == R.styleable.HeaderView_is_active_button_group) {
-                    isActiveButtonGroup = typedArray.getBoolean(attr, false);
+                    boolean isActiveButtonGroup = typedArray.getBoolean(attr, false);
 
                     changeStateButtonGroup(isActiveButtonGroup);
 
                 } else if (attr == R.styleable.HeaderView_section_name) {
-                    sectionNameStr = typedArray.getString(attr);
+                    String sectionNameStr = typedArray.getString(attr);
 
                     setSectionName(sectionNameStr);
                 }
@@ -101,11 +85,11 @@ public class HeaderView extends LinearLayout {
     }
 
     private void goToHistory(Context context) {
-        Log.d("mytag", "goToHistory: pressed btn");
+        Log.d("HEADER", "goToHistory: pressed btn");
     }
 
     private void goToDev(Context context) {
-        Log.d("mytag", "goToDev: pressed btn");
+        Log.d("HEADER", "goToDev: pressed btn");
         Intent intent = new Intent(context, DevActivity.class);
         context.startActivity(intent);
     }
