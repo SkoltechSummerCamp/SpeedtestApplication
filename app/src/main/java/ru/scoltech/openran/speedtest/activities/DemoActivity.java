@@ -63,7 +63,8 @@ public class DemoActivity extends AppCompatActivity {
 
         init();
 
-        sm = new SpeedManager(readSpeedFromAssetsCSV("iperfClientReal.csv"));
+        sm = SpeedManager.getInstance();
+        sm.attachList(readSpeedFromAssetsCSV("iperfClientReal.csv"));
     }
 
     private void init() {
