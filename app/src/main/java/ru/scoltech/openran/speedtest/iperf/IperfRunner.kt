@@ -62,7 +62,7 @@ class IperfRunner(
     @Throws(IperfException::class, InterruptedException::class)
     fun start(args: String) {
         lock.lock()
-        if (processWaiterThread != null) {
+        while (processWaiterThread != null) {
             sendSigKill()
             finishedCondition.await()
         }
