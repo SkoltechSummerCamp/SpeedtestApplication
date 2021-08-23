@@ -40,10 +40,10 @@ class DevActivity : AppCompatActivity() {
 
         refreshAddresses()
 
-        iperfRunner = IperfRunner(applicationContext.filesDir.absolutePath).also {
-            it.stdoutHandler = ::handleIperfOutput
-            it.stderrHandler = ::handleIperfOutput
-        }
+        iperfRunner = IperfRunner.Builder(applicationContext.filesDir.absolutePath)
+            .stdoutLinesHandler(this::handleIperfOutput)
+            .stderrLinesHandler(this::handleIperfOutput)
+            .build()
 
         startStopButtonDispatcher = ButtonDispatcherOfTwoStates(
             binding.startStopButton, this,
