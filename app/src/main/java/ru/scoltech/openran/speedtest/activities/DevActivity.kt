@@ -41,8 +41,8 @@ class DevActivity : AppCompatActivity() {
         refreshAddresses()
 
         iperfRunner = IperfRunner.Builder(applicationContext.filesDir.absolutePath)
-            .stdoutLinesHandler(this::handleIperfOutput)
-            .stderrLinesHandler(this::handleIperfOutput)
+            .stdoutLinesHandler(this::handleIperfLines)
+            .stderrLinesHandler(this::handleIperfLines)
             .build()
 
         startStopButtonDispatcher = ButtonDispatcherOfTwoStates(
@@ -205,9 +205,10 @@ class DevActivity : AppCompatActivity() {
         Log.d("interfaces", info)
     }
 
-    private fun handleIperfOutput(text: String) {
+    private fun handleIperfLines(text: String) {
         runOnUiThread {
             binding.iperfOutput.append(text)
+            binding.iperfOutput.append(System.lineSeparator())
         }
     }
 
