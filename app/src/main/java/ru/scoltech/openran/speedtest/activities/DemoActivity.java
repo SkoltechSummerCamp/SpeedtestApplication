@@ -17,8 +17,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Unit;
 import ru.scoltech.openran.speedtest.R;
 import ru.scoltech.openran.speedtest.SpeedManager;
+import ru.scoltech.openran.speedtest.SpeedTestManager;
 import ru.scoltech.openran.speedtest.Wave;
 import ru.scoltech.openran.speedtest.customButtons.ActionButton;
 import ru.scoltech.openran.speedtest.customButtons.SaveButton;
@@ -50,6 +52,8 @@ public class DemoActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable task;
 
+    private SpeedTestManager speedTestManager;
+
     private final static int MEASURING_DELAY = 200;
     private final static int TASK_DELAY = 1000;
 
@@ -63,7 +67,6 @@ public class DemoActivity extends AppCompatActivity {
         init();
 
         sm = SpeedManager.getInstance();
-        sm.attachList(readSpeedFromAssetsCSV("iperfClientReal.csv"));
     }
 
     private void init() {
@@ -81,6 +84,65 @@ public class DemoActivity extends AppCompatActivity {
         shareBtn = findViewById(R.id.share_btn);
         saveBtn = findViewById(R.id.save_btn);
 
+        // TODO split on methods
+        speedTestManager = new SpeedTestManager.Builder(this)
+                .onPingUpdate((ping) -> {
+                    runOnUiThread(() -> mCard.setPing(ping.intValue()));
+                    return Unit.INSTANCE;
+                })
+                .onDownloadSpeedUpdate((speedBitsPS) -> {
+                    runOnUiThread(() -> {
+                        Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
+                        mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+
+                        //animation
+                        cWave.attachSpeed(instSpeed.first);
+                        cWave.invalidate();
+                    });
+                    return Unit.INSTANCE;
+                })
+                .onDownloadFinish((statistics) -> {
+                    runOnUiThread(() -> mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageSpeed(statistics))));
+                    return (long) TASK_DELAY;
+                })
+                .onUploadStart(() -> {
+                    runOnUiThread(() -> cWave.attachColor(getColor(R.color.gold)));
+                    return Unit.INSTANCE;
+                })
+                .onUploadSpeedUpdate((speedBitsPS) -> {
+                    runOnUiThread(() -> {
+                        Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
+                        mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+
+                        //animation
+                        cWave.attachSpeed(instSpeed.first);
+                        cWave.invalidate();
+                    });
+                    return Unit.INSTANCE;
+                })
+                .onUploadFinish((statistics) -> {
+                    runOnUiThread(() -> mSubResults.setUploadSpeed(getSpeedString(sm.getAverageSpeed(statistics))));
+                    return Unit.INSTANCE;
+                })
+                .onFinish(() -> {
+                    runOnUiThread(() -> {
+                        actionBtn.setPlay();
+
+                        String downloadSpeed = mSubResults.getDownloadSpeed();
+                        String uploadSpeed = mSubResults.getUploadSpeed();
+                        String ping = mCard.getPing();
+                        onResultUI(downloadSpeed, uploadSpeed, ping);
+                    });
+                    return Unit.INSTANCE;
+                })
+                .onStopped(() -> {
+                    runOnUiThread(() -> {
+                        actionBtn.setPlay();
+                        mSubResults.setEmpty();
+                    });
+                    return Unit.INSTANCE;
+                })
+                .build();
     }
 
     public void onClick(View v) {
@@ -89,17 +151,17 @@ public class DemoActivity extends AppCompatActivity {
             if (actionBtn.getContentDescription().toString().equals("start")) {
 
                 onPlayUI();
-                measureDownloadSpeed();
+                speedTestManager.start();
 
             } else if (actionBtn.getContentDescription().toString().equals("stop")) {
 
                 onStopUI();
-                stopMeasuring();
+                speedTestManager.stop();
 
             } else if (actionBtn.getContentDescription().toString().equals("play")) {
 
                 onPlayUI();
-                measureDownloadSpeed();
+                speedTestManager.start();
             }
         }
     }
@@ -118,7 +180,6 @@ public class DemoActivity extends AppCompatActivity {
         }
         return records;
     }
-
 
     private void measureDownloadSpeed() {
 

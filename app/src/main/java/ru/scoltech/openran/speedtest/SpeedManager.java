@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.LongSummaryStatistics;
 
 public class SpeedManager {
     private int[] uploadArray;
@@ -65,6 +66,17 @@ public class SpeedManager {
         }
     }
 
+    public Pair<Integer, Integer> getAverageSpeed(LongSummaryStatistics statistics) {
+        int speed = (int) (statistics.getAverage() / 1000);
+
+        int int_speed = speed / 1000;
+        int frac_speed = speed % 1000;
+
+        if (frac_speed > 99)
+            return new Pair<>(int_speed, frac_speed / 10);
+        else
+            return new Pair<>(int_speed, frac_speed);
+    }
 
     private Pair<Integer, Integer> getAverageSpeed(int[] listBit) {
 

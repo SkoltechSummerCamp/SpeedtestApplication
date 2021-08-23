@@ -71,7 +71,7 @@ public class CardView extends LinearLayout {
         mStatus = status;
     }
 
-    private void setPing(int ping) {
+    public void setPing(int ping) {
         pingTV.setText(String.valueOf(ping));
     }
 
