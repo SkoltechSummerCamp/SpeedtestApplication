@@ -1,3 +1,4 @@
 [submodule "iPerf"]
 	path = iPerf
-	url = https://github.com/SkoltechSummerCamp/iPerf.git
+	url = https://git.code.sf.net/p/iperf2/code
+	branch = 2-1-1
