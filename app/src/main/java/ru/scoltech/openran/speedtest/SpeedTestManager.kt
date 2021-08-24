@@ -4,13 +4,19 @@ import android.content.Context
 import android.util.Log
 import com.opencsv.CSVParser
 import kotlinx.coroutines.*
+import ru.scoltech.openran.speedtest.iperf.IperfException
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
+import java.io.IOException
+import java.lang.Exception
 import java.lang.Runnable
+import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import java.util.function.BiConsumer
 import java.util.function.Consumer
 import java.util.function.LongConsumer
 import java.util.function.ToLongFunction
+import kotlin.concurrent.withLock
 import kotlin.math.roundToLong
 
 class SpeedTestManager
@@ -25,7 +31,7 @@ private constructor(
     private val onUploadFinish: (LongSummaryStatistics) -> Unit,
     private val onFinish: () -> Unit,
     private val onStopped: () -> Unit,
-    private val onLog: (String) -> Unit = {},
+    private val onLog: (String, String) -> Unit,
     private val onFatalError: (String) -> Unit,
 ) {
     private var downloadSpeedStatistics = LongSummaryStatistics()
@@ -41,15 +47,16 @@ private constructor(
 
     private val iperfRunner = IperfRunner.Builder(context.filesDir.absolutePath)
         .stdoutLinesHandler(this::handleIperfStdout)
-        .stderrLinesHandler(this::onIperfError)
+        .stderrLinesHandler(this::onIperfStderrLine)
         .onFinishCallback(this::onIperfFinish)
         .build()
 
     fun start() {
-        lock.lock()
-        downloadSpeedStatistics = LongSummaryStatistics()
-        uploadSpeedStatistics = LongSummaryStatistics()
-        lock.unlock()
+        // TODO wait until stop
+        lock.withLock {
+            downloadSpeedStatistics = LongSummaryStatistics()
+            uploadSpeedStatistics = LongSummaryStatistics()
+        }
 
         CoroutineScope(Dispatchers.IO).launch {
             // TODO uncomment when balancer api is ready
@@ -64,13 +71,16 @@ private constructor(
             // TODO remove when balancer api is ready
             val addresses = arrayOf(ServerAddr("localhost", 5000, 5201))
 
-            val serverInfo = addresses.map { it to getPing(it) }
-                .minByOrNull { it.second }
-                ?: return@launch onFatalError("No servers are available right now")
+            runCatchingStop {
+                val serverInfo = addresses.map { it to getPing(it) }
+                    .minByOrNull { it.second }
+                    ?: return@launch stopWithFatalError("No servers are available right now")
 
-            onPingUpdate(serverInfo.second)
-            serverAddress = serverInfo.first
-            startDownload()
+                onPingUpdate(serverInfo.second)
+                serverAddress = serverInfo.first
+                checkStop()
+                startDownload()
+            }
         }
     }
 
@@ -78,110 +88,169 @@ private constructor(
         val icmpPing = ICMPPing()
 
         var ping = ""
+        // TODO interrupt externally
         icmpPing.justPingByHost(address.ip) {
             ping = it
             icmpPing.stopExecuting()
         }
+        checkStop()
         return ping.toDouble().roundToLong()
     }
 
-    suspend fun startDownload() {
-        val serverMessage = sendGETRequest(
-            "${serverAddress.ip}:${serverAddress.port}",
-            RequestType.START,
-            1000L,
-            "-s -u",
-        )
-
-        if (serverMessage == "error") {
-            onFatalError(serverMessage)
-        } else {
-            lock.lock()
+    private suspend fun startDownload() {
+        startTest("-R") {
             onDownloadStart()
             state = State.DOWNLOAD
-            lock.unlock()
-
-            iperfRunner.start(
-                "-c ${serverAddress.ip} -p ${serverAddress.portIperf} -i 0.1 -y C -u -b 120m -R"
-            )
         }
     }
 
-    suspend fun startUpload() {
-        val serverMessage = sendGETRequest(
-            "${serverAddress.ip}:${serverAddress.port}",
-            RequestType.START,
-            1000L,
-            "-s -u",
-        )
-
-        if (serverMessage == "error") {
-            onFatalError(serverMessage)
-        } else {
-            lock.lock()
+    private suspend fun startUpload() {
+        startTest {
             onUploadStart()
             state = State.UPLOAD
-            lock.unlock()
+        }
+    }
 
-            iperfRunner.start(
-                "-c ${serverAddress.ip} -p ${serverAddress.portIperf} -y C -i 0.1 -u -b 120m"
+    private suspend inline fun startTest(additionalArgs: String = "", beforeStart: () -> Unit) {
+        runCatchingStop {
+            val serverMessage = sendGETRequest(
+                "${serverAddress.ip}:${serverAddress.port}",
+                RequestType.START,
+                1000L,
+                "-s -u",
             )
+            checkStop()
+
+            if (serverMessage == "error") {
+                // TODO server message
+                stopWithFatalError(serverMessage)
+            } else {
+                lock.withLock {
+                    beforeStart()
+                }
+
+                while (true) {
+                    try {
+                        iperfRunner.start(
+                            "-c ${serverAddress.ip} -p ${serverAddress.portIperf} " +
+                                    "-y C -i 0.1 -u -b 120m $additionalArgs"
+                        )
+                        break
+                    } catch (e: InterruptedException) {
+                        val message = "Interrupted iPerf start. Ignoring..."
+                        Log.e(LOG_TAG, message, e)
+                        onLog(LOG_TAG, message)
+                    } catch (e: IperfException) {
+                        stopWithFatalError("Could not start iPerf")
+                        return
+                    }
+                }
+            }
         }
     }
 
     fun stop() {
-        lock.lock()
-        state = State.STOPPED
-        lock.unlock()
+        lock.withLock {
+            state = State.STOPPED
+        }
 
-        iperfRunner.sendSigKill()
-        iperfRunner.killAndWait()
+        try {
+            iperfRunner.sendSigKill()
+        } catch (e: IperfException) {
+            lock.withLock {
+                stopWithFatalError("Could not send SIGKILL to iPerf", e)
+                state = State.STOPPED
+            }
+        }
+    }
+
+    // TODO stop without checking field
+    private fun checkStop() {
+        lock.withLock {
+            if (state == State.STOPPED) {
+                throw StopException()
+            }
+        }
+    }
+
+    private inline fun runCatchingStop(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: StopException) {
+            onStopped()
+            lock.withLock {
+                state = State.NONE
+            }
+        }
+    }
+
+    private fun stopWithFatalError(message: String, exception: Exception? = null) {
+        lock.withLock {
+            if (exception != null) {
+                Log.e(LOG_TAG, message, exception)
+                onFatalError("$message: ${exception.message}")
+            } else {
+                Log.e(LOG_TAG, message)
+                onFatalError(message)
+            }
+            state = State.NONE
+        }
     }
 
     private fun handleIperfStdout(line: String) {
-        lock.lock()
-        val speed = CSVParser().parseLine(line)[8].toLong()
-        if (state == State.DOWNLOAD) {
-            onDownloadSpeedUpdate(speed)
-            downloadSpeedStatistics.accept(speed)
-        } else if (state == State.UPLOAD) {
-            onUploadSpeedUpdate(speed)
-            uploadSpeedStatistics.accept(speed)
+        onLog("iPerf stdout", line)
+        lock.withLock {
+            val speed = try {
+                CSVParser().parseLine(line)[8].toLong()
+            } catch (e: IOException) {
+                Log.e(LOG_TAG, "Invalid stdout format: $line")
+                return
+            }
+            if (state == State.DOWNLOAD) {
+                onDownloadSpeedUpdate(speed)
+                downloadSpeedStatistics.accept(speed)
+            } else if (state == State.UPLOAD) {
+                onUploadSpeedUpdate(speed)
+                uploadSpeedStatistics.accept(speed)
+            }
         }
-        lock.unlock()
     }
 
-    private fun onIperfError(error: String) {
-        Log.e(LOG_TAG, error)
-        lock.lock()
-        onLog(error)
-        lock.unlock()
+    private fun onIperfStderrLine(line: String) {
+        onLog("iPerf stderr", line)
     }
 
     private fun onIperfFinish() {
-        lock.lock()
-        when (state) {
-            State.DOWNLOAD -> {
-                val delayBeforeUpload = onDownloadFinish(downloadSpeedStatistics)
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(delayBeforeUpload)
-                    startUpload()
+        lock.withLock {
+            when (state) {
+                State.DOWNLOAD -> {
+                    val delayBeforeUpload = onDownloadFinish(downloadSpeedStatistics)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        // TODO cancel on stop
+                        delay(delayBeforeUpload)
+                        startUpload()
+                    }
+                }
+                State.UPLOAD -> {
+                    onUploadFinish(uploadSpeedStatistics)
+                    onFinish()
+                    state = State.NONE
+                }
+                State.STOPPED -> {
+                    onStopped()
+                    state = State.NONE
+                }
+                State.NONE -> {
+                    val message = "Invalid manager state (NONE) on iperf stop"
+                    Log.e(LOG_TAG, message)
+                    onLog(LOG_TAG, message)
                 }
             }
-            State.UPLOAD -> {
-                onUploadFinish(uploadSpeedStatistics)
-                onFinish()
-            }
-            State.STOPPED -> {
-                onStopped()
-            }
-            else -> {}
         }
-        lock.unlock()
     }
 
     private enum class State {
-        NONE, DOWNLOAD, UPLOAD, STOPPED, ERROR
+        NONE, DOWNLOAD, UPLOAD, STOPPED
     }
 
     // TODO remove when balancer api is ready
@@ -197,7 +266,7 @@ private constructor(
         private var onUploadFinish: Consumer<LongSummaryStatistics> = Consumer {}
         private var onFinish: Runnable = Runnable {}
         private var onStopped: Runnable = Runnable {}
-        private var onLog: Consumer<String> = Consumer {}
+        private var onLog: BiConsumer<String, String> = BiConsumer { _, _ -> }
         private var onFatalError: Consumer<String> = Consumer {}
 
         fun build(): SpeedTestManager {
@@ -262,7 +331,7 @@ private constructor(
             return this
         }
 
-        fun onLog(onLog: Consumer<String>): Builder {
+        fun onLog(onLog: BiConsumer<String, String>): Builder {
             this.onLog = onLog
             return this
         }
@@ -272,6 +341,8 @@ private constructor(
             return this
         }
     }
+
+    private class StopException : RuntimeException()
 
     companion object {
         private const val LOG_TAG = "SpeedTestManager"
