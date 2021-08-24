@@ -6,6 +6,7 @@ import com.opencsv.CSVParser
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.iperf.IperfException
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
+import ru.scoltech.openran.speedtest.util.IdleTaskKiller
 import java.io.IOException
 import java.lang.Exception
 import java.lang.Runnable
@@ -44,6 +45,8 @@ private constructor(
     private lateinit var serverAddress: ServerAddr
 
     private val lock = ReentrantLock()
+
+    private val idleTaskKiller: IdleTaskKiller = IdleTaskKiller()
 
     private val iperfRunner = IperfRunner.Builder(context.filesDir.absolutePath)
         .stdoutLinesHandler(this::handleIperfStdout)
@@ -135,6 +138,9 @@ private constructor(
                             "-c ${serverAddress.ip} -p ${serverAddress.portIperf} " +
                                     "-y C -i 0.1 -u -b 120m $additionalArgs"
                         )
+                        idleTaskKiller.register(IPERF_IDLE_TIME) {
+                            iperfRunner.sendSigKill()
+                        }
                         break
                     } catch (e: InterruptedException) {
                         val message = "Interrupted iPerf start. Ignoring..."
@@ -200,6 +206,7 @@ private constructor(
     private fun handleIperfStdout(line: String) {
         onLog("iPerf stdout", line)
         lock.withLock {
+            idleTaskKiller.updateTaskState()
             val speed = try {
                 CSVParser().parseLine(line)[8].toLong()
             } catch (e: IOException) {
@@ -217,11 +224,15 @@ private constructor(
     }
 
     private fun onIperfStderrLine(line: String) {
+        idleTaskKiller.updateTaskState()
         onLog("iPerf stderr", line)
     }
 
     private fun onIperfFinish() {
         lock.withLock {
+            runBlocking {
+                idleTaskKiller.unregister()
+            }
             when (state) {
                 State.DOWNLOAD -> {
                     val delayBeforeUpload = onDownloadFinish(downloadSpeedStatistics)
@@ -346,5 +357,6 @@ private constructor(
 
     companion object {
         private const val LOG_TAG = "SpeedTestManager"
+        private const val IPERF_IDLE_TIME = 1000L
     }
 }
