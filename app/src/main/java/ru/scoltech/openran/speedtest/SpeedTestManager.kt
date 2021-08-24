@@ -2,7 +2,9 @@ package ru.scoltech.openran.speedtest
 
 import android.content.Context
 import android.util.Log
-import com.opencsv.CSVParser
+import io.swagger.client.ApiClient
+import io.swagger.client.ApiException
+import io.swagger.client.api.ClientApi
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.iperf.IperfException
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
@@ -44,7 +46,10 @@ private constructor(
     private var state = State.NONE
 
     @Volatile
-    private lateinit var serverAddress: ServerAddr
+    private lateinit var serverAddress: MyServerAddr
+
+    @Volatile
+    private lateinit var balancerSocketAddress: String
 
     private val lock = ReentrantLock()
 
@@ -57,28 +62,20 @@ private constructor(
         .onFinishCallback(this::onIperfFinish)
         .build()
 
-    fun start() {
+    fun start(balancerSocketAddress: String) {
         // TODO wait until stop
         lock.withLock {
             downloadSpeedStatistics = LongSummaryStatistics()
             uploadSpeedStatistics = LongSummaryStatistics()
         }
 
+        this.balancerSocketAddress = balancerSocketAddress
         CoroutineScope(Dispatchers.IO).launch {
-            // TODO uncomment when balancer api is ready
-//            val addresses = ClientApi().clientObtainIp()
-//            if (addresses.isEmpty()) {
-//                onError("Could not obtain server ip")
-//                return@launch
-//            }
-//
-//            serverAddress = addresses[0]
-
-            // TODO remove when balancer api is ready
-            val addresses = arrayOf(ServerAddr("localhost", 5000, 5201))
-
             runCatchingStop {
-                val serverInfo = addresses.map { it to getPing(it) }
+                val addresses = obtainAddresses() ?: return@launch
+                checkStop()
+                val serverInfo = addresses
+                    .map { it to getPing(it) }
                     .minByOrNull { it.second }
                     ?: return@launch stopWithFatalError("No servers are available right now")
 
@@ -90,7 +87,29 @@ private constructor(
         }
     }
 
-    private fun getPing(address: ServerAddr): Long {
+    private fun obtainAddresses(): List<MyServerAddr>? {
+        val balancerAddress = "http://$balancerSocketAddress/Skoltech_OpenRAN_5G/iperf_load_balancer/0.1.0"
+        val addresses = try {
+            ClientApi(ApiClient().setBasePath(balancerAddress)).clientObtainIp()
+        } catch (e: ApiException) {
+            stopWithFatalError("Could not connect to balancer", e)
+            return null
+        }
+
+        if (addresses.isEmpty()) {
+            stopWithFatalError("Could not obtain server ip")
+            return null
+        }
+
+        if (addresses.any { it.ip == null }) {
+            // TODO make required at api level
+            stopWithFatalError("Balancer did not provide required field (ip)")
+            return null
+        }
+        return addresses.map { MyServerAddr(it.ip!!, it.port, it.portIperf) }
+    }
+
+    private fun getPing(address: MyServerAddr): Long {
         val icmpPing = ICMPPing()
 
         var ping = ""
@@ -111,6 +130,7 @@ private constructor(
     }
 
     private suspend fun startUpload() {
+        serverAddress = obtainAddresses()?.first() ?: return
         startTest {
             onUploadStart()
             state = State.UPLOAD
@@ -120,9 +140,10 @@ private constructor(
     private suspend inline fun startTest(
         additionalClientArgs: String = "",
         additionalServerArgs: String = "",
-        beforeStart: () -> Unit
+        beforeStart: () -> Unit,
     ) {
         runCatchingStop {
+            checkStop()
             val serverMessage = sendGETRequest(
                 "${serverAddress.ip}:${serverAddress.port}",
                 RequestType.START,
@@ -280,7 +301,7 @@ private constructor(
     }
 
     // TODO remove when balancer api is ready
-    private data class ServerAddr(val ip: String, val port: Int, val portIperf: Int)
+    private data class MyServerAddr(val ip: String, val port: Int, val portIperf: Int)
 
     class Builder(private val context: Context) {
         private var onPingUpdate: LongConsumer = LongConsumer {}

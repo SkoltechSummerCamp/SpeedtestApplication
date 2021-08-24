@@ -17,7 +17,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Unit;
+import kotlin.collections.SetsKt;
 import ru.scoltech.openran.speedtest.R;
 import ru.scoltech.openran.speedtest.SpeedManager;
 import ru.scoltech.openran.speedtest.SpeedTestManager;
@@ -127,20 +127,16 @@ public class DemoActivity extends AppCompatActivity {
     public void onClick(View v) {
         if (v.getId() == R.id.action_btn) {
 
-            if (actionBtn.getContentDescription().toString().equals("start")) {
+            if (SetsKt.setOf("start", "play").contains(actionBtn.getContentDescription().toString())) {
 
                 onPlayUI();
-                speedTestManager.start();
+                speedTestManager.start("45.134.27.29:5555");
 
             } else if (actionBtn.getContentDescription().toString().equals("stop")) {
 
                 onStopUI();
                 speedTestManager.stop();
 
-            } else if (actionBtn.getContentDescription().toString().equals("play")) {
-
-                onPlayUI();
-                speedTestManager.start();
             }
         }
     }

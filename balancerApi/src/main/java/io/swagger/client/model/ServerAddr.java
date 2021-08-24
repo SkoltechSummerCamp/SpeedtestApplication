@@ -26,7 +26,6 @@ import org.threeten.bp.OffsetDateTime;
  * ServerAddr
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-08-24T18:16:49.908Z[GMT]")
 public class ServerAddr {
   @SerializedName("ip")
   private String ip = null;
