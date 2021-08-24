@@ -61,6 +61,7 @@ class IperfRunner(
      */
     @Throws(IperfException::class, InterruptedException::class)
     fun start(args: String) {
+        Log.d(LOG_TAG, "Starting with command: iperf $args")
         lock.lock()
         while (processWaiterThread != null) {
             sendSigKill()
@@ -129,6 +130,7 @@ class IperfRunner(
         }
 
         onFinishCallback()
+        Log.d(LOG_TAG, "Finished executing")
         processWaiterThread = null
         processPid = 0
         finishedCondition.signalAll()
