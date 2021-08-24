@@ -86,62 +86,41 @@ public class DemoActivity extends AppCompatActivity {
 
         // TODO split on methods
         speedTestManager = new SpeedTestManager.Builder(this)
-                .onPingUpdate((ping) -> {
-                    runOnUiThread(() -> mCard.setPing(ping.intValue()));
-                    return Unit.INSTANCE;
-                })
-                .onDownloadSpeedUpdate((speedBitsPS) -> {
-                    runOnUiThread(() -> {
-                        Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
-                        mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+                .onPingUpdate((ping) -> runOnUiThread(() -> mCard.setPing((int) ping)))
+                .onDownloadSpeedUpdate((speedBitsPS) -> runOnUiThread(() -> {
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision((int) speedBitsPS, 2);
+                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
-                        //animation
-                        cWave.attachSpeed(instSpeed.first);
-                        cWave.invalidate();
-                    });
-                    return Unit.INSTANCE;
-                })
+                    //animation
+                    cWave.attachSpeed(instSpeed.first);
+                    cWave.invalidate();
+                }))
                 .onDownloadFinish((statistics) -> {
                     runOnUiThread(() -> mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageSpeed(statistics))));
                     return (long) TASK_DELAY;
                 })
-                .onUploadStart(() -> {
-                    runOnUiThread(() -> cWave.attachColor(getColor(R.color.gold)));
-                    return Unit.INSTANCE;
-                })
-                .onUploadSpeedUpdate((speedBitsPS) -> {
-                    runOnUiThread(() -> {
-                        Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
-                        mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+                .onUploadStart(() -> runOnUiThread(() -> cWave.attachColor(getColor(R.color.gold))))
+                .onUploadSpeedUpdate((speedBitsPS) -> runOnUiThread(() -> {
+                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision((int) speedBitsPS, 2);
+                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
 
-                        //animation
-                        cWave.attachSpeed(instSpeed.first);
-                        cWave.invalidate();
-                    });
-                    return Unit.INSTANCE;
-                })
-                .onUploadFinish((statistics) -> {
-                    runOnUiThread(() -> mSubResults.setUploadSpeed(getSpeedString(sm.getAverageSpeed(statistics))));
-                    return Unit.INSTANCE;
-                })
-                .onFinish(() -> {
-                    runOnUiThread(() -> {
-                        actionBtn.setPlay();
+                    //animation
+                    cWave.attachSpeed(instSpeed.first);
+                    cWave.invalidate();
+                }))
+                .onUploadFinish((statistics) -> runOnUiThread(() -> mSubResults.setUploadSpeed(getSpeedString(sm.getAverageSpeed(statistics)))))
+                .onFinish(() -> runOnUiThread(() -> {
+                    actionBtn.setPlay();
 
-                        String downloadSpeed = mSubResults.getDownloadSpeed();
-                        String uploadSpeed = mSubResults.getUploadSpeed();
-                        String ping = mCard.getPing();
-                        onResultUI(downloadSpeed, uploadSpeed, ping);
-                    });
-                    return Unit.INSTANCE;
-                })
-                .onStopped(() -> {
-                    runOnUiThread(() -> {
-                        actionBtn.setPlay();
-                        mSubResults.setEmpty();
-                    });
-                    return Unit.INSTANCE;
-                })
+                    String downloadSpeed = mSubResults.getDownloadSpeed();
+                    String uploadSpeed = mSubResults.getUploadSpeed();
+                    String ping = mCard.getPing();
+                    onResultUI(downloadSpeed, uploadSpeed, ping);
+                }))
+                .onStopped(() -> runOnUiThread(() -> {
+                    actionBtn.setPlay();
+                    mSubResults.setEmpty();
+                }))
                 .build();
     }
 

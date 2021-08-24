@@ -5,8 +5,12 @@ import android.util.Log
 import com.opencsv.CSVParser
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
+import java.lang.Runnable
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import java.util.function.Consumer
+import java.util.function.LongConsumer
+import java.util.function.ToLongFunction
 import kotlin.math.roundToLong
 
 class SpeedTestManager
@@ -21,7 +25,8 @@ private constructor(
     private val onUploadFinish: (LongSummaryStatistics) -> Unit,
     private val onFinish: () -> Unit,
     private val onStopped: () -> Unit,
-    private val onError: (String) -> Unit,
+    private val onLog: (String) -> Unit = {},
+    private val onFatalError: (String) -> Unit,
 ) {
     private var downloadSpeedStatistics = LongSummaryStatistics()
     private var uploadSpeedStatistics = LongSummaryStatistics()
@@ -61,7 +66,7 @@ private constructor(
 
             val serverInfo = addresses.map { it to getPing(it) }
                 .minByOrNull { it.second }
-                ?: return@launch onError("No servers are available right now")
+                ?: return@launch onFatalError("No servers are available right now")
 
             onPingUpdate(serverInfo.second)
             serverAddress = serverInfo.first
@@ -89,7 +94,7 @@ private constructor(
         )
 
         if (serverMessage == "error") {
-            onError(serverMessage)
+            onFatalError(serverMessage)
         } else {
             lock.lock()
             onDownloadStart()
@@ -111,7 +116,7 @@ private constructor(
         )
 
         if (serverMessage == "error") {
-            onError(serverMessage)
+            onFatalError(serverMessage)
         } else {
             lock.lock()
             onUploadStart()
@@ -149,10 +154,7 @@ private constructor(
     private fun onIperfError(error: String) {
         Log.e(LOG_TAG, error)
         lock.lock()
-        if (state != State.STOPPED) {
-//            state = State.ERROR
-            onError(error)
-        }
+        onLog(error)
         lock.unlock()
     }
 
@@ -186,80 +188,87 @@ private constructor(
     private data class ServerAddr(val ip: String, val port: Int, val portIperf: Int)
 
     class Builder(private val context: Context) {
-        private var onPingUpdate: (Long) -> Unit = {}
-        private var onDownloadStart: () -> Unit = {}
-        private var onDownloadSpeedUpdate: (Long) -> Unit = {}
-        private var onDownloadFinish: (LongSummaryStatistics) -> Long = { 0 }
-        private var onUploadStart: () -> Unit = {}
-        private var onUploadSpeedUpdate: (Long) -> Unit = {}
-        private var onUploadFinish: (LongSummaryStatistics) -> Unit = {}
-        private var onFinish: () -> Unit = {}
-        private var onStopped: () -> Unit = {}
-        private var onError: (String) -> Unit = {}
+        private var onPingUpdate: LongConsumer = LongConsumer {}
+        private var onDownloadStart: Runnable = Runnable {}
+        private var onDownloadSpeedUpdate: LongConsumer = LongConsumer {}
+        private var onDownloadFinish: ToLongFunction<LongSummaryStatistics> = ToLongFunction { 0 }
+        private var onUploadStart: Runnable = Runnable {}
+        private var onUploadSpeedUpdate: LongConsumer = LongConsumer {}
+        private var onUploadFinish: Consumer<LongSummaryStatistics> = Consumer {}
+        private var onFinish: Runnable = Runnable {}
+        private var onStopped: Runnable = Runnable {}
+        private var onLog: Consumer<String> = Consumer {}
+        private var onFatalError: Consumer<String> = Consumer {}
 
         fun build(): SpeedTestManager {
             return SpeedTestManager(
                 context,
-                onPingUpdate,
-                onDownloadStart,
-                onDownloadSpeedUpdate,
-                onDownloadFinish,
-                onUploadStart,
-                onUploadSpeedUpdate,
-                onUploadFinish,
-                onFinish,
-                onStopped,
-                onError,
+                onPingUpdate::accept,
+                onDownloadStart::run,
+                onDownloadSpeedUpdate::accept,
+                onDownloadFinish::applyAsLong,
+                onUploadStart::run,
+                onUploadSpeedUpdate::accept,
+                onUploadFinish::accept,
+                onFinish::run,
+                onStopped::run,
+                onLog::accept,
+                onFatalError::accept,
             )
         }
 
-        fun onPingUpdate(onPingUpdate: (Long) -> Unit): Builder {
+        fun onPingUpdate(onPingUpdate: LongConsumer): Builder {
             this.onPingUpdate = onPingUpdate
             return this
         }
 
-        fun onDownloadStart(onDownloadStart: () -> Unit): Builder {
+        fun onDownloadStart(onDownloadStart: Runnable): Builder {
             this.onDownloadStart = onDownloadStart
             return this
         }
 
-        fun onDownloadSpeedUpdate(onDownloadSpeedUpdate: (Long) -> Unit): Builder {
+        fun onDownloadSpeedUpdate(onDownloadSpeedUpdate: LongConsumer): Builder {
             this.onDownloadSpeedUpdate = onDownloadSpeedUpdate
             return this
         }
 
-        fun onDownloadFinish(onDownloadFinish: (LongSummaryStatistics) -> Long): Builder {
+        fun onDownloadFinish(onDownloadFinish: ToLongFunction<LongSummaryStatistics>): Builder {
             this.onDownloadFinish = onDownloadFinish
             return this
         }
 
-        fun onUploadStart(onUploadStart: () -> Unit): Builder {
+        fun onUploadStart(onUploadStart: Runnable): Builder {
             this.onUploadStart = onUploadStart
             return this
         }
 
-        fun onUploadSpeedUpdate(onUploadSpeedUpdate: (Long) -> Unit): Builder {
+        fun onUploadSpeedUpdate(onUploadSpeedUpdate: LongConsumer): Builder {
             this.onUploadSpeedUpdate = onUploadSpeedUpdate
             return this
         }
 
-        fun onUploadFinish(onUploadFinish: (LongSummaryStatistics) -> Unit): Builder {
+        fun onUploadFinish(onUploadFinish: Consumer<LongSummaryStatistics>): Builder {
             this.onUploadFinish = onUploadFinish
             return this
         }
 
-        fun onFinish(onFinish: () -> Unit): Builder {
+        fun onFinish(onFinish: Runnable): Builder {
             this.onFinish = onFinish
             return this
         }
 
-        fun onStopped(onStopped: () -> Unit): Builder {
+        fun onStopped(onStopped: Runnable): Builder {
             this.onStopped = onStopped
             return this
         }
 
-        fun onError(onError: (String) -> Unit): Builder {
-            this.onError = onError
+        fun onLog(onLog: Consumer<String>): Builder {
+            this.onLog = onLog
+            return this
+        }
+
+        fun onFatalError(onFatalError: Consumer<String>): Builder {
+            this.onFatalError = onFatalError
             return this
         }
     }
