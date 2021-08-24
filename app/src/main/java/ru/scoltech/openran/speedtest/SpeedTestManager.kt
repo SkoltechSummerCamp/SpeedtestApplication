@@ -6,6 +6,8 @@ import com.opencsv.CSVParser
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.iperf.IperfException
 import ru.scoltech.openran.speedtest.iperf.IperfRunner
+import ru.scoltech.openran.speedtest.parser.IperfOutputParser
+import ru.scoltech.openran.speedtest.parser.MultithreadedIperfOutputParser
 import ru.scoltech.openran.speedtest.util.IdleTaskKiller
 import java.io.IOException
 import java.lang.Exception
@@ -47,6 +49,7 @@ private constructor(
     private val lock = ReentrantLock()
 
     private val idleTaskKiller: IdleTaskKiller = IdleTaskKiller()
+    private val speedParser: IperfOutputParser = MultithreadedIperfOutputParser()
 
     private val iperfRunner = IperfRunner.Builder(context.filesDir.absolutePath)
         .stdoutLinesHandler(this::handleIperfStdout)
@@ -101,7 +104,7 @@ private constructor(
     }
 
     private suspend fun startDownload() {
-        startTest("-R") {
+        startTest("-u -R", "-u") {
             onDownloadStart()
             state = State.DOWNLOAD
         }
@@ -114,13 +117,17 @@ private constructor(
         }
     }
 
-    private suspend inline fun startTest(additionalArgs: String = "", beforeStart: () -> Unit) {
+    private suspend inline fun startTest(
+        additionalClientArgs: String = "",
+        additionalServerArgs: String = "",
+        beforeStart: () -> Unit
+    ) {
         runCatchingStop {
             val serverMessage = sendGETRequest(
                 "${serverAddress.ip}:${serverAddress.port}",
                 RequestType.START,
                 1000L,
-                "-s -u",
+                "-s $additionalServerArgs",
             )
             checkStop()
 
@@ -136,7 +143,7 @@ private constructor(
                     try {
                         iperfRunner.start(
                             "-c ${serverAddress.ip} -p ${serverAddress.portIperf} " +
-                                    "-y C -i 0.1 -u -b 120m $additionalArgs"
+                                    "-f b -P 10 --sum-only -i 0.1 -b 120m $additionalClientArgs"
                         )
                         idleTaskKiller.register(IPERF_IDLE_TIME) {
                             iperfRunner.sendSigKill()
@@ -208,9 +215,17 @@ private constructor(
         lock.withLock {
             idleTaskKiller.updateTaskState()
             val speed = try {
-                CSVParser().parseLine(line)[8].toLong()
+                speedParser.parseSpeed(line)
             } catch (e: IOException) {
-                Log.e(LOG_TAG, "Invalid stdout format: $line")
+                val message = "Invalid stdout format: $line"
+                if (e !is MultithreadedIperfOutputParser.BadFormatException) {
+                    Log.e(LOG_TAG, message, e)
+                } else {
+                    Log.e(LOG_TAG, message)
+                    Log.e(LOG_TAG, e.message.toString())
+                }
+                onLog(LOG_TAG, message)
+                e.message?.let { onLog(LOG_TAG, it) }
                 return
             }
             if (state == State.DOWNLOAD) {
