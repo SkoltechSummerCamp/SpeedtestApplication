@@ -67,6 +67,9 @@ private constructor(
         lock.withLock {
             downloadSpeedStatistics = LongSummaryStatistics()
             uploadSpeedStatistics = LongSummaryStatistics()
+
+            // TODO check if current state is not NONE
+            state = State.NONE
         }
 
         this.balancerSocketAddress = balancerSocketAddress
@@ -109,17 +112,27 @@ private constructor(
         return addresses.map { MyServerAddr(it.ip!!, it.port, it.portIperf) }
     }
 
-    private fun getPing(address: MyServerAddr): Long {
+    private suspend fun getPing(address: MyServerAddr): Long {
         val icmpPing = ICMPPing()
 
-        var ping = ""
-        // TODO interrupt externally
-        icmpPing.justPingByHost(address.ip) {
-            ping = it
+        val deferred = CoroutineScope(Dispatchers.IO).async {
+            var ping = ""
+            icmpPing.justPingByHost(address.ip) {
+                ping = it
+                icmpPing.stopExecuting()
+            }
+            ping
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            delay(1000)
             icmpPing.stopExecuting()
         }
+        val ping = deferred.await()
         checkStop()
-        return ping.toDouble().roundToLong()
+        return ping.toDoubleOrNull()?.roundToLong()
+            ?: throw FatalException(
+                if (ping == "") "Icmp ping timed out" else "Could not parse ping value $ping"
+            )
     }
 
     private suspend fun startDownload() {
@@ -130,10 +143,13 @@ private constructor(
     }
 
     private suspend fun startUpload() {
-        serverAddress = obtainAddresses()?.first() ?: return
-        startTest {
-            onUploadStart()
-            state = State.UPLOAD
+        runCatchingStop {
+            checkStop()
+            serverAddress = obtainAddresses()?.first() ?: return
+            startTest {
+                onUploadStart()
+                state = State.UPLOAD
+            }
         }
     }
 
@@ -143,13 +159,16 @@ private constructor(
         beforeStart: () -> Unit,
     ) {
         runCatchingStop {
-            checkStop()
-            val serverMessage = sendGETRequest(
-                "${serverAddress.ip}:${serverAddress.port}",
-                RequestType.START,
-                1000L,
-                "-s $additionalServerArgs",
-            )
+            val serverMessage = try {
+                sendGETRequest(
+                    "${serverAddress.ip}:${serverAddress.port}",
+                    RequestType.START,
+                    1000L,
+                    "-s $additionalServerArgs",
+                )
+            } catch (e: Exception) {
+                throw FatalException("Could not connect to server: ${e::class.qualifiedName}: ${e.message}")
+            }
             checkStop()
 
             if (serverMessage == "error") {
@@ -211,7 +230,14 @@ private constructor(
         try {
             block()
         } catch (e: StopException) {
+            Log.i(LOG_TAG, "Stopped", e)
             onStopped()
+            lock.withLock {
+                state = State.NONE
+            }
+        } catch (e: FatalException) {
+            Log.e(LOG_TAG, "Fatal error", e)
+            onFatalError(e.message!!)
             lock.withLock {
                 state = State.NONE
             }
@@ -390,6 +416,7 @@ private constructor(
     }
 
     private class StopException : RuntimeException()
+    private class FatalException(message: String) : RuntimeException(message)
 
     companion object {
         private const val LOG_TAG = "SpeedTestManager"

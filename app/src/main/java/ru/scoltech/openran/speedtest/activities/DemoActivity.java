@@ -55,7 +55,7 @@ public class DemoActivity extends AppCompatActivity {
     private SpeedTestManager speedTestManager;
 
     private final static int MEASURING_DELAY = 200;
-    private final static int TASK_DELAY = 1000;
+    private final static int TASK_DELAY = 2500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +97,7 @@ public class DemoActivity extends AppCompatActivity {
                 }))
                 .onDownloadFinish((statistics) -> {
                     runOnUiThread(() -> mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageSpeed(statistics))));
-                    return (long) TASK_DELAY;
+                    return TASK_DELAY;
                 })
                 .onUploadStart(() -> runOnUiThread(() -> cWave.attachColor(getColor(R.color.gold))))
                 .onUploadSpeedUpdate((speedBitsPS) -> runOnUiThread(() -> {
@@ -118,9 +118,19 @@ public class DemoActivity extends AppCompatActivity {
                     onResultUI(downloadSpeed, uploadSpeed, ping);
                 }))
                 .onStopped(() -> runOnUiThread(() -> {
+                    onStopUI();
                     actionBtn.setPlay();
                     mSubResults.setEmpty();
                 }))
+                .onFatalError((s) -> runOnUiThread(() -> {
+                    // TODO bad tag
+                    Log.e("FATAL", s);
+
+                    onStopUI();
+                    actionBtn.setPlay();
+                    mSubResults.setEmpty();
+                }))
+                .onLog(Log::v)
                 .build();
     }
 
