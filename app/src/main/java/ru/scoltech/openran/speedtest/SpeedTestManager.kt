@@ -49,7 +49,7 @@ private constructor(
     private lateinit var serverAddress: MyServerAddr
 
     @Volatile
-    private lateinit var balancerSocketAddress: String
+    private lateinit var mainAddress: String
 
     private val lock = ReentrantLock()
 
@@ -62,7 +62,7 @@ private constructor(
         .onFinishCallback(this::onIperfFinish)
         .build()
 
-    fun start(balancerSocketAddress: String) {
+    fun start(useBalancer: Boolean, mainAddress: String) {
         // TODO wait until stop
         lock.withLock {
             downloadSpeedStatistics = LongSummaryStatistics()
@@ -72,7 +72,7 @@ private constructor(
             state = State.NONE
         }
 
-        this.balancerSocketAddress = balancerSocketAddress
+        this.mainAddress = mainAddress
         CoroutineScope(Dispatchers.IO).launch {
             runCatchingStop {
                 val addresses = obtainAddresses() ?: return@launch
@@ -91,7 +91,7 @@ private constructor(
     }
 
     private fun obtainAddresses(): List<MyServerAddr>? {
-        val balancerAddress = "http://$balancerSocketAddress/Skoltech_OpenRAN_5G/iperf_load_balancer/0.1.0"
+        val balancerAddress = "http://$mainAddress/Skoltech_OpenRAN_5G/iperf_load_balancer/0.1.0"
         val addresses = try {
             ClientApi(ApiClient().setBasePath(balancerAddress)).clientObtainIp()
         } catch (e: ApiException) {

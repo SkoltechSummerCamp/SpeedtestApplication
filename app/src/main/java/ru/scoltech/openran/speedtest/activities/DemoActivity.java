@@ -1,10 +1,17 @@
 package ru.scoltech.openran.speedtest.activities;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import kotlin.collections.SetsKt;
+import kotlin.text.StringsKt;
+import ru.scoltech.openran.speedtest.ApplicationConstants;
 import ru.scoltech.openran.speedtest.R;
 import ru.scoltech.openran.speedtest.SpeedManager;
 import ru.scoltech.openran.speedtest.SpeedTestManager;
@@ -46,6 +55,7 @@ public class DemoActivity extends AppCompatActivity {
     private TextView actionTV;
     private ShareButton shareBtn;
     private SaveButton saveBtn;
+    private RelativeLayout settings;
 
     private SpeedManager sm;
 
@@ -83,6 +93,56 @@ public class DemoActivity extends AppCompatActivity {
 
         shareBtn = findViewById(R.id.share_btn);
         saveBtn = findViewById(R.id.save_btn);
+
+        settings = findViewById(R.id.start_screen_settings);
+        final EditText mainAddress = findViewById(R.id.main_address);
+        mainAddress.setText(
+                getPreferences(MODE_PRIVATE).getString(
+                        ApplicationConstants.MAIN_ADDRESS_KEY,
+                        getString(R.string.default_main_address)
+                )
+        );
+        mainAddress.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // no operations
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // no operations
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                final CharSequence newMainAddress = StringsKt.isBlank(s)
+                        ? getString(R.string.default_main_address) : s;
+                SharedPreferences.Editor preferences = getPreferences(MODE_PRIVATE).edit();
+                preferences.putString(
+                        ApplicationConstants.MAIN_ADDRESS_KEY,
+                        newMainAddress.toString()
+                );
+                preferences.apply();
+            }
+        });
+
+        final RadioGroup modeRadioGroup = findViewById(R.id.mode_radio_group);
+        modeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            SharedPreferences.Editor preferences = getPreferences(MODE_PRIVATE).edit();
+            preferences.putBoolean(
+                    ApplicationConstants.USE_BALANCER_KEY,
+                    checkedId == R.id.balancer_mode
+            );
+            preferences.apply();
+        });
+
+        final boolean useBalancer = getPreferences(MODE_PRIVATE)
+                .getBoolean(ApplicationConstants.USE_BALANCER_KEY, true);
+        if (useBalancer) {
+            this.<RadioButton>findViewById(R.id.balancer_mode).setChecked(true);
+        } else {
+            this.<RadioButton>findViewById(R.id.direct_mode).setChecked(true);
+        }
 
         // TODO split on methods
         speedTestManager = new SpeedTestManager.Builder(this)
@@ -140,7 +200,16 @@ public class DemoActivity extends AppCompatActivity {
             if (SetsKt.setOf("start", "play").contains(actionBtn.getContentDescription().toString())) {
 
                 onPlayUI();
-                speedTestManager.start("45.134.27.29:5555");
+                speedTestManager.start(
+                        getPreferences(MODE_PRIVATE).getBoolean(
+                                ApplicationConstants.USE_BALANCER_KEY,
+                                true
+                        ),
+                        getPreferences(MODE_PRIVATE).getString(
+                                ApplicationConstants.MAIN_ADDRESS_KEY,
+                                getString(R.string.default_main_address)
+                        )
+                );
 
             } else if (actionBtn.getContentDescription().toString().equals("stop")) {
 
@@ -283,6 +352,8 @@ public class DemoActivity extends AppCompatActivity {
     }
 
     public void onPlayUI() {
+        settings.setVisibility(View.GONE);
+
         mCard.setVisibility(View.VISIBLE);
         mCard.setDefaultCaptions();
 
