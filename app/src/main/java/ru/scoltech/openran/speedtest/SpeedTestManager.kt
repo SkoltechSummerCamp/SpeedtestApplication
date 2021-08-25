@@ -15,6 +15,8 @@ import java.io.IOException
 import java.lang.Exception
 import java.lang.Runnable
 import java.lang.RuntimeException
+import java.net.InetSocketAddress
+import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.BiConsumer
@@ -49,7 +51,10 @@ private constructor(
     private lateinit var serverAddress: MyServerAddr
 
     @Volatile
-    private lateinit var mainAddress: String
+    private lateinit var mainAddress: InetSocketAddress
+
+    @Volatile
+    private var useBalancer: Boolean = true
 
     private val lock = ReentrantLock()
 
@@ -72,10 +77,31 @@ private constructor(
             state = State.NONE
         }
 
-        this.mainAddress = mainAddress
+        this.useBalancer = useBalancer
         CoroutineScope(Dispatchers.IO).launch {
             runCatchingStop {
-                val addresses = obtainAddresses() ?: return@launch
+                this@SpeedTestManager.mainAddress = try {
+                    parseInetSocketAddress(
+                        mainAddress,
+                        if (this@SpeedTestManager.useBalancer) {
+                            ApplicationConstants.DEFAULT_BALANCER_PORT
+                        } else {
+                            ApplicationConstants.DEFAULT_IPERF_SERVER_PORT
+                        }
+                    )
+                } catch (e: UnknownHostException) {
+                    throw FatalException(
+                        "Could not parse address: ${e::class.qualifiedName}: ${e.message}"
+                    )
+                }
+
+                val addresses = if (useBalancer) {
+                    obtainAddresses() ?: return@launch
+                } else {
+                    val iperfAddress = this@SpeedTestManager.mainAddress
+                    listOf(MyServerAddr(iperfAddress.address.hostAddress, 0, iperfAddress.port))
+                }
+
                 checkStop()
                 val serverInfo = addresses
                     .map { it to getPing(it) }
@@ -145,7 +171,9 @@ private constructor(
     private suspend fun startUpload() {
         runCatchingStop {
             checkStop()
-            serverAddress = obtainAddresses()?.first() ?: return
+            if (useBalancer) {
+                serverAddress = obtainAddresses()?.first() ?: return
+            }
             startTest {
                 onUploadStart()
                 state = State.UPLOAD
@@ -159,15 +187,21 @@ private constructor(
         beforeStart: () -> Unit,
     ) {
         runCatchingStop {
-            val serverMessage = try {
-                sendGETRequest(
-                    "${serverAddress.ip}:${serverAddress.port}",
-                    RequestType.START,
-                    1000L,
-                    "-s $additionalServerArgs",
-                )
-            } catch (e: Exception) {
-                throw FatalException("Could not connect to server: ${e::class.qualifiedName}: ${e.message}")
+            val serverMessage = if (useBalancer) {
+                try {
+                    sendGETRequest(
+                        "${serverAddress.ip}:${serverAddress.port}",
+                        RequestType.START,
+                        1000L,
+                        "-s $additionalServerArgs",
+                    )
+                } catch (e: Exception) {
+                    throw FatalException(
+                        "Could not connect to server: ${e::class.qualifiedName}: ${e.message}"
+                    )
+                }
+            } else {
+                ""
             }
             checkStop()
 
@@ -236,11 +270,7 @@ private constructor(
                 state = State.NONE
             }
         } catch (e: FatalException) {
-            Log.e(LOG_TAG, "Fatal error", e)
-            onFatalError(e.message!!)
-            lock.withLock {
-                state = State.NONE
-            }
+            stopWithFatalError("Fatal error", e)
         }
     }
 
@@ -298,10 +328,15 @@ private constructor(
             when (state) {
                 State.DOWNLOAD -> {
                     val delayBeforeUpload = onDownloadFinish(downloadSpeedStatistics)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        // TODO cancel on stop
-                        delay(delayBeforeUpload)
-                        startUpload()
+                    if (useBalancer) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // TODO cancel on stop
+                            delay(delayBeforeUpload)
+                            startUpload()
+                        }
+                    } else {
+                        onFinish()
+                        state = State.NONE
                     }
                 }
                 State.UPLOAD -> {
