@@ -1,5 +1,6 @@
 package ru.scoltech.openran.speedtest.activities
 
+import android.content.pm.ActivityInfo
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
@@ -29,6 +30,7 @@ class DevActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         binding = ActivityDevBinding.inflate(layoutInflater)
         setContentView(binding.root)
