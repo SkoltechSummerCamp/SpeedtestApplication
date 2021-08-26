@@ -17,6 +17,8 @@ import java.lang.RuntimeException
 import java.net.InetSocketAddress
 import java.net.UnknownHostException
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.BiConsumer
 import java.util.function.Consumer
@@ -137,27 +139,47 @@ private constructor(
         return addresses.map { MyServerAddr(it.ip!!, it.port, it.portIperf) }
     }
 
-    private suspend fun getPing(address: MyServerAddr): Long {
-        val icmpPing = IcmpPing()
+    private fun getPing(address: MyServerAddr): Long {
+        val pingTimedOut = -1L
+        val pingFailed = -2L
 
-        val deferred = CoroutineScope(Dispatchers.IO).async {
-            var ping = ""
-            icmpPing.justPingByHost(address.ip) {
-                ping = it
-                icmpPing.stopExecuting()
+        val icmpPinger = IcmpPinger()
+        val ping = AtomicLong(pingFailed)
+        val exception: AtomicReference<Exception> = AtomicReference()
+        val condition = lock.newCondition()
+
+        icmpPinger.start(address.ip)
+            .onSuccess {
+                ping.set(it)
+                icmpPinger.stop()
             }
-            ping
+            .onError {
+                lock.withLock {
+                    exception.set(it)
+                    condition.signalAll()
+                }
+            }
+            .start()
+        idleTaskKiller.registerBlocking(PING_TIMEOUT) {
+            ping.set(pingTimedOut)
+            icmpPinger.stop()
         }
-        CoroutineScope(Dispatchers.IO).launch {
-            delay(1000)
-            icmpPing.stopExecuting()
+        lock.withLock {
+            if (exception.get() == null) {
+                condition.await()
+            }
         }
-        val ping = deferred.await()
+        idleTaskKiller.unregisterBlocking()
         checkStop()
-        return ping.toDoubleOrNull()?.roundToLong()
-            ?: throw FatalException(
-                if (ping == "") "Icmp ping timed out" else "Could not parse ping value $ping"
-            )
+
+        val pingValue = ping.get()
+        if (pingValue == pingTimedOut) {
+            throw FatalException("Icmp ping timed out")
+        } else if (pingValue == pingFailed) {
+            val e = exception.get()
+            throw FatalException("Icmp ping failed: ${e::class.qualifiedName}: ${e.message}")
+        }
+        return pingValue
     }
 
     private suspend fun startDownload() {
@@ -320,11 +342,7 @@ private constructor(
     }
 
     private fun onIperfFinish() {
-        lock.withLock {
-            runBlocking {
-                idleTaskKiller.unregister()
-            }
-        }
+        idleTaskKiller.unregisterBlocking()
 
         runCatchingStop {
             if (useBalancer) {
@@ -465,5 +483,6 @@ private constructor(
     companion object {
         private const val LOG_TAG = "SpeedTestManager"
         private const val IPERF_IDLE_TIME = 1000L
+        private const val PING_TIMEOUT = 1000L
     }
 }
