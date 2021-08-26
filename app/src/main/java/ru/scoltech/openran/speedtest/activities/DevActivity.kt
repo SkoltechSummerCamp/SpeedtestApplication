@@ -7,8 +7,8 @@ import android.util.Log
 import androidx.core.view.isVisible
 import kotlinx.coroutines.*
 import ru.scoltech.openran.speedtest.*
+import ru.scoltech.openran.speedtest.backend.*
 import ru.scoltech.openran.speedtest.databinding.ActivityDevBinding
-import ru.scoltech.openran.speedtest.iperf.IperfRunner
 import java.net.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -22,7 +22,7 @@ class DevActivity : AppCompatActivity() {
     private lateinit var pcs: PingCheckServer
 
     private val justICMPPingInChecking = AtomicBoolean(false)
-    val pingerByICMP = ICMPPing()
+    val pingerByICMP = IcmpPing()
 
     private lateinit var pingByUDPButtonDispatcher: RunForShortTimeButtonDispatcher
     private lateinit var pingServerButtonDispatcher: ButtonDispatcherOfTwoStates
@@ -174,7 +174,7 @@ class DevActivity : AppCompatActivity() {
     }
 
     private fun pingUDPButtonAction(afterWorkAct: () -> Unit) = runBlocking {
-        val pcl = PingCheckClient()
+        val pcl = UdpPingCheckClient()
         Log.d("pingTestButtonAction", "started")
         CoroutineScope(Dispatchers.IO).launch {
             pcl.doPingTest(

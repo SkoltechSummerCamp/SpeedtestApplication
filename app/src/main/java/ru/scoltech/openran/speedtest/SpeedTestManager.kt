@@ -6,8 +6,7 @@ import io.swagger.client.ApiClient
 import io.swagger.client.ApiException
 import io.swagger.client.api.ClientApi
 import kotlinx.coroutines.*
-import ru.scoltech.openran.speedtest.iperf.IperfException
-import ru.scoltech.openran.speedtest.iperf.IperfRunner
+import ru.scoltech.openran.speedtest.backend.*
 import ru.scoltech.openran.speedtest.parser.IperfOutputParser
 import ru.scoltech.openran.speedtest.parser.MultithreadedIperfOutputParser
 import ru.scoltech.openran.speedtest.util.IdleTaskKiller
@@ -139,7 +138,7 @@ private constructor(
     }
 
     private suspend fun getPing(address: MyServerAddr): Long {
-        val icmpPing = ICMPPing()
+        val icmpPing = IcmpPing()
 
         val deferred = CoroutineScope(Dispatchers.IO).async {
             var ping = ""

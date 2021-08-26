@@ -1,4 +1,4 @@
-package ru.scoltech.openran.speedtest.iperf
+package ru.scoltech.openran.speedtest.backend
 
 import android.util.Log
 import kotlinx.coroutines.*

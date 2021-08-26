@@ -1,4 +1,4 @@
-package ru.scoltech.openran.speedtest
+package ru.scoltech.openran.speedtest.backend
 
 import android.util.Log
 import java.io.BufferedReader
@@ -7,7 +7,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ICMPPing {
+class IcmpPing {
     private val inExecuting = AtomicBoolean(false)
 
     @Volatile
