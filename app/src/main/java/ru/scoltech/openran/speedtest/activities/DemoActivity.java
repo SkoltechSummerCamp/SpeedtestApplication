@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -56,7 +57,7 @@ public class DemoActivity extends AppCompatActivity {
     private TextView actionTV;
     private ShareButton shareBtn;
     private SaveButton saveBtn;
-    private RelativeLayout settings;
+    private ConstraintLayout settings;
 
     private SpeedManager sm;
 
