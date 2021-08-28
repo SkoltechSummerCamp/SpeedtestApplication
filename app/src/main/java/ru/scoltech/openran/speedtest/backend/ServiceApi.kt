@@ -81,16 +81,6 @@ class ServiceApi(private val httpClient: OkHttpClient) {
         return httpClient.newCall(request)
     }
 
-    private fun HttpUrl.Builder.addPathSegments(segments: List<String>): HttpUrl.Builder {
-        segments.forEach { addPathSegment(it) }
-        return this
-    }
-
-    private fun HttpUrl.Builder.addQueryParameters(parameters: Map<String, String>): HttpUrl.Builder {
-        parameters.forEach { (name, value) -> addQueryParameter(name, value) }
-        return this
-    }
-
     private class IgnoreCallback : Callback {
         override fun onFailure(request: Request, e: IOException) {}
 
@@ -104,13 +94,5 @@ class ServiceApi(private val httpClient: OkHttpClient) {
         val STOP_IPERF_PATH_SEGMENTS = listOf("stop-iperf")
         val START_IPERF_PATH_SEGMENTS = listOf("start-iperf")
         const val ARGS_PARAMETER_NAME = "args"
-    }
-}
-
-private fun Response.closeBody() {
-    try {
-        body()?.close()
-    } catch (e: IOException) {
-        Log.e(ServiceApi.LOG_TAG, "Could not close response body", e)
     }
 }
