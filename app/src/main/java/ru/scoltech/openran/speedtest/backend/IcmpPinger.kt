@@ -3,11 +3,13 @@ package ru.scoltech.openran.speedtest.backend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import ru.scoltech.openran.speedtest.util.IdleTaskKiller
 import ru.scoltech.openran.speedtest.util.Promise
 import java.io.DataOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.lang.Exception
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -75,6 +77,39 @@ class IcmpPinger {
                 }
                 .onError(onError ?: {})
                 .start()
+        }
+    }
+
+    fun pingOnce(host: String, timeoutMillis: Long): Promise<(Long) -> Unit, (Exception) -> Unit> {
+        return Promise { onSuccess, onError ->
+            val success = AtomicBoolean(false)
+            val timedOut = AtomicBoolean(false)
+            val timeoutKiller = IdleTaskKiller()
+
+            lock.withLock {
+                start(host)
+                    .onSuccess {
+                        onSuccess?.invoke(it)
+                        success.set(true)
+                        stop()
+                        lock.withLock(timeoutKiller::unregisterBlocking)
+                    }
+                    .onError {
+                        if (!success.get()) {
+                            if (timedOut.get()) {
+                                onError?.invoke(IOException("Timed out"))
+                            } else {
+                                onError?.invoke(it)
+                            }
+                        }
+                        lock.withLock(timeoutKiller::unregisterBlocking)
+                    }
+                    .start()
+                timeoutKiller.registerBlocking(timeoutMillis) {
+                    timedOut.set(true)
+                    stop()
+                }
+            }
         }
     }
 
