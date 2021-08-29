@@ -68,7 +68,12 @@ private constructor(
             val localUploadManager = builder.build()
             val localDelayJob = CoroutineScope(Dispatchers.Default)
                 .launch(start = CoroutineStart.LAZY) {
-                    delay(idleBetweenTasksMelees)
+                    try {
+                        delay(idleBetweenTasksMelees)
+                    } catch (e: CancellationException) {
+                        onStop()
+                        return@launch
+                    }
                     localUploadManager.start()
                 }
             delayJob = localDelayJob
