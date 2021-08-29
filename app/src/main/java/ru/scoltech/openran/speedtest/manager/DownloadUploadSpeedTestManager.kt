@@ -2,6 +2,7 @@ package ru.scoltech.openran.speedtest.manager
 
 import android.content.Context
 import kotlinx.coroutines.*
+import ru.scoltech.openran.speedtest.ApplicationConstants
 import ru.scoltech.openran.speedtest.backend.parseInetSocketAddress
 import java.lang.Runnable
 import java.net.UnknownHostException
@@ -35,67 +36,89 @@ private constructor(
     private var delayJob: Job? = null
 
     fun start(useBalancer: Boolean, mainAddress: String, idleBetweenTasksMelees: Long) {
-        // TODO default port
-        // TODO start in separate thread
+        val startLock = ReentrantLock()
+        val startedCondition = startLock.newCondition()
+
+        startLock.withLock {
+            CoroutineScope(Dispatchers.IO).launch {
+                lock.withLock {
+                    startLock.withLock(startedCondition::signal)
+                    internalStart(useBalancer, mainAddress, idleBetweenTasksMelees)
+                }
+            }
+            // guarantees that the `lock` was acquired
+            // so render thread won't try to stop execution before actual start
+            startedCondition.await()
+        }
+    }
+
+    private fun internalStart(
+        useBalancer: Boolean,
+        mainAddress: String,
+        idleBetweenTasksMelees: Long,
+    ) {
         val address = try {
-            parseInetSocketAddress(mainAddress, 0)
+            val defaultPort = if (useBalancer) {
+                ApplicationConstants.DEFAULT_BALANCER_PORT
+            } else {
+                ApplicationConstants.DEFAULT_IPERF_SERVER_PORT
+            }
+            parseInetSocketAddress(mainAddress, defaultPort)
         } catch (e: UnknownHostException) {
             onFatalError("Unknown host ($mainAddress): ${e.message}")
             return
         }
 
-        lock.withLock {
-            stop()
-            val builder = SpeedTestManager.Builder(
-                context,
-                "$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_UPLOAD_CLIENT_ARGS",
-                address,
-            )
-                .serverArgs("-s $DEFAULT_UPLOAD_SERVER_ARGS")
-                .useBalancer(useBalancer)
-                .checkPing(false)
-                .onPingUpdate(onPingUpdate)
-                .onStart(onUploadStart)
-                .onSpeedUpdate(onUploadSpeedUpdate)
-                .onLog(onLog)
-                .onFinish {
-                    onUploadFinish(it)
+        stop()
+        val builder = SpeedTestManager.Builder(
+            context,
+            "$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_UPLOAD_CLIENT_ARGS",
+            address,
+        )
+            .serverArgs("-s $DEFAULT_UPLOAD_SERVER_ARGS")
+            .useBalancer(useBalancer)
+            .checkPing(false)
+            .onPingUpdate(onPingUpdate)
+            .onStart(onUploadStart)
+            .onSpeedUpdate(onUploadSpeedUpdate)
+            .onLog(onLog)
+            .onFinish {
+                onUploadFinish(it)
+                onFinish()
+            }
+            .onStop(onStop)
+            .onFatalError(onFatalError)
+
+        val localUploadManager = builder.build()
+        val localDelayJob = CoroutineScope(Dispatchers.Default)
+            .launch(start = CoroutineStart.LAZY) {
+                try {
+                    delay(idleBetweenTasksMelees)
+                } catch (e: CancellationException) {
+                    onStop()
+                    return@launch
+                }
+                localUploadManager.start()
+            }
+        delayJob = localDelayJob
+        uploadManager = localUploadManager
+
+        downloadManager = builder
+            .clientArgs("$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_DOWNLOAD_CLIENT_ARGS")
+            .serverArgs("-s $DEFAULT_DOWNLOAD_SERVER_ARGS")
+            .checkPing(true)
+            .onStart(onDownloadStart)
+            .onSpeedUpdate(onDownloadSpeedUpdate)
+            .onFinish {
+                onDownloadFinish(it)
+                if (useBalancer) {
+                    localDelayJob.start()
+                } else {
                     onFinish()
                 }
-                .onStop(onStop)
-                .onFatalError(onFatalError)
-
-            val localUploadManager = builder.build()
-            val localDelayJob = CoroutineScope(Dispatchers.Default)
-                .launch(start = CoroutineStart.LAZY) {
-                    try {
-                        delay(idleBetweenTasksMelees)
-                    } catch (e: CancellationException) {
-                        onStop()
-                        return@launch
-                    }
-                    localUploadManager.start()
-                }
-            delayJob = localDelayJob
-            uploadManager = localUploadManager
-
-            downloadManager = builder
-                .clientArgs("$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_DOWNLOAD_CLIENT_ARGS")
-                .serverArgs("-s $DEFAULT_DOWNLOAD_SERVER_ARGS")
-                .checkPing(true)
-                .onStart(onDownloadStart)
-                .onSpeedUpdate(onDownloadSpeedUpdate)
-                .onFinish {
-                    onDownloadFinish(it)
-                    if (useBalancer) {
-                        localDelayJob.start()
-                    } else {
-                        onFinish()
-                    }
-                }
-                .build()
-                .apply { start() }
-        }
+            }
+            .build()
+            .apply { start() }
     }
 
     fun stop() {
