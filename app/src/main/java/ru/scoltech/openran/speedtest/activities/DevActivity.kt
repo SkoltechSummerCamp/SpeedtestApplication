@@ -30,7 +30,6 @@ class DevActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         binding = ActivityDevBinding.inflate(layoutInflater)
         setContentView(binding.root)

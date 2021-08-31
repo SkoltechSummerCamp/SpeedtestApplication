@@ -77,7 +77,6 @@ public class DemoActivity extends AppCompatActivity {
 
 
         super.onCreate(savedInstanceState);
-        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
