@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -14,22 +13,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import kotlin.collections.MapsKt;
 import kotlin.collections.SetsKt;
 import kotlin.text.StringsKt;
 import ru.scoltech.openran.speedtest.ApplicationConstants;
@@ -75,24 +67,14 @@ public class DemoActivity extends AppCompatActivity {
         int currentNightMode = getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK;
 
-        switch (currentNightMode) {
-            case Configuration.UI_MODE_NIGHT_NO: {
-                // Night mode is not active, we're in day time
-                Log.d(TAG, "onCreate: Light Theme");
-                break;
-            }
-            case Configuration.UI_MODE_NIGHT_YES: {
-                // Night mode is active, we're at night!
-                Log.d(TAG, "onCreate: Dark Theme");
-                break;
-            }
-            case Configuration.UI_MODE_NIGHT_UNDEFINED: {
-                // We don't know what mode we're in, assume notnight
-                Log.d(TAG, "onCreate: Undefined Theme");
-                break;
-            }
+        Map<Integer, String> map = MapsKt.mapOf(
+                new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_NO, "onCreate: Light Theme"),
+                new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_YES, "onCreate: Dark Theme"),
+                new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_UNDEFINED, "onCreate: Undefined Theme")
+        );
 
-        }
+        Log.d(TAG, map.get(currentNightMode));
+
 
         super.onCreate(savedInstanceState);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
