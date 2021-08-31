@@ -24,9 +24,9 @@
 
             android:gravity="top"
             android:lineSpacingExtra="0sp"
-            android:text="0"
-            android:textAppearance="@style/headline_1"
-            android:textColor="@color/colorLightBackground"
+            android:text="@string/_0"
+            android:textAppearance="@style/Headline1"
+            android:textColor="@color/neutral_10"
 
             app:layout_constraintRight_toLeftOf="@+id/dot_speed"
             tools:ignore="MissingConstraints" />
@@ -38,8 +38,8 @@
             android:gravity="top"
 
             android:lineSpacingExtra="0sp"
-            android:text="."
-            android:textAppearance="@style/headline_1"
+            android:text="@string/dot"
+            android:textAppearance="@style/Headline1"
             android:textColor="@color/colorLightBackground"
 
             app:layout_constraintLeft_toLeftOf="@+id/speed_info"
@@ -59,8 +59,8 @@
 
                 android:gravity="top"
                 android:lineSpacingExtra="0sp"
-                android:text="0"
-                android:textAppearance="@style/headline_1"
+                android:text="@string/_0"
+                android:textAppearance="@style/Headline1"
                 android:textColor="@color/colorLightBackground" />
 
             <TextView
@@ -71,7 +71,7 @@
                 android:layout_marginTop="-10dp"
 
                 android:text="@string/mbps"
-                android:textAppearance="@style/headline_2"
+                android:textAppearance="@style/Headline2"
                 android:textColor="@color/colorLightBackground"
                 app:layout_constraintTop_toBottomOf="@+id/fraction_speed" />
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -100,7 +100,7 @@
             android:layout_marginEnd="40dp"
 
             android:text="@string/ping"
-            android:textAppearance="@style/headline_4"
+            android:textAppearance="@style/Headline4"
             android:textColor="@color/colorLightBackground" />
 
         <TextView
@@ -111,8 +111,8 @@
 
             android:layout_marginEnd="40dp"
 
-            android:text="-"
-            android:textAppearance="@style/headline_4"
+            android:text="@string/empty"
+            android:textAppearance="@style/Headline4"
             android:textColor="@color/colorLightBackground" />
 
     </LinearLayout>

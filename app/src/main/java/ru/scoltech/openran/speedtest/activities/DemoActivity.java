@@ -1,7 +1,9 @@
 package ru.scoltech.openran.speedtest.activities;
 
+
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -16,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.opencsv.CSVReader;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import kotlin.collections.SetsKt;
 import kotlin.text.StringsKt;
@@ -44,6 +48,7 @@ import ru.scoltech.openran.speedtest.manager.DownloadUploadSpeedTestManager;
 
 public class DemoActivity extends AppCompatActivity {
 
+    private String TAG = "DEMO_ACTIVITY";
     private Wave cWave;
     private CardView mCard;
     private SubResultView mSubResults; // in progress result
@@ -61,16 +66,39 @@ public class DemoActivity extends AppCompatActivity {
 
     private SpeedManager sm;
 
-    private Handler handler;
-    private Runnable task;
+//    private Handler handler;
+//    private Runnable task;
 
     private DownloadUploadSpeedTestManager speedTestManager;
 
-    private final static int MEASURING_DELAY = 200;
+    //    private final static int MEASURING_DELAY = 200;
     private final static int TASK_DELAY = 2500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        int currentNightMode = getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+
+        switch (currentNightMode) {
+            case Configuration.UI_MODE_NIGHT_NO: {
+                // Night mode is not active, we're in day time
+                Log.d(TAG, "onCreate: Light Theme");
+                break;
+            }
+            case Configuration.UI_MODE_NIGHT_YES: {
+                // Night mode is active, we're at night!
+                Log.d(TAG, "onCreate: Dark Theme");
+                break;
+            }
+            case Configuration.UI_MODE_NIGHT_UNDEFINED: {
+                // We don't know what mode we're in, assume notnight
+                Log.d(TAG, "onCreate: Undefined Theme");
+                break;
+            }
+
+        }
+
         super.onCreate(savedInstanceState);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -226,112 +254,112 @@ public class DemoActivity extends AppCompatActivity {
     }
 
 
-    private List<String> readSpeedFromAssetsCSV(String filename) {
-        List<String> records = new ArrayList<String>();
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(getAssets().open(filename)));) {
-            String[] values = null;
-            while ((values = csvReader.readNext()) != null) {
-                records.add(values[8]);
-            }
-
-        } catch (IOException | CsvValidationException e) {
-            e.printStackTrace();
-        }
-        return records;
-    }
-
-    private void measureDownloadSpeed() {
-
-        handler = new Handler();
-        task = new Runnable() {
-            int i = 0;
-
-            @Override
-            public void run() {
-                Log.d("MEASURE", "Doing task download" + i);
-
-                if (i < sm.getDownloadArray().length) {
-
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadArray()[i], 2);
-                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
-
-                    i++;
-                    handler.postDelayed(this, MEASURING_DELAY);
-
-                    //animation
-                    cWave.attachSpeed(instSpeed.first);
-                    cWave.invalidate();
-
-                    // if finish counting
-                } else {
-                    handler.removeCallbacks(this);
-
-                    mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageDownloadSpeed()));
-
-                    // delay between two tasks: download and upload
-                    handler = new Handler();
-                    handler.postDelayed(() -> {
-
-                        cWave.attachColor(getColor(R.color.gold));
-                        measureUploadSpeed();
-
-                    }, TASK_DELAY);
-                }
-            }
-        };
-        handler.post(task);
-    }
-
-    private void measureUploadSpeed() {
-
-
-        handler = new Handler();
-        task = new Runnable() {
-            int i = 0;
-
-            @Override
-            public void run() {
-                Log.d("MEASURE", "Doing task upload" + i);
-
-                if (i < sm.getUploadArray().length) {
-
-                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadArray()[i], 2);
-                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
-
-                    i++;
-                    handler.postDelayed(this, MEASURING_DELAY);
-
-                    //animation
-                    cWave.attachSpeed(instSpeed.first);
-                    cWave.invalidate();
-
-                } else {
-                    handler.removeCallbacks(this);
-
-                    mSubResults.setUploadSpeed(getSpeedString(sm.getAverageUploadSpeed()));
-                    actionBtn.setPlay();
-
-                    String downloadSpeed = mSubResults.getDownloadSpeed();
-                    String uploadSpeed = mSubResults.getUploadSpeed();
-                    String ping = mCard.getPing();
-                    onResultUI(downloadSpeed, uploadSpeed, ping);
-                }
-            }
-        };
-        handler.post(task);
-    }
-
-    private void stopMeasuring() {
-        Log.d("MEASURE", "stopSpeed: mock stopping");
-
-        actionBtn.setPlay();
-        mSubResults.setEmpty();
-
-        handler.removeCallbacks(task);
-    }
+//    private List<String> readSpeedFromAssetsCSV(String filename) {
+//        List<String> records = new ArrayList<String>();
+//        try (CSVReader csvReader = new CSVReader(new InputStreamReader(getAssets().open(filename)));) {
+//            String[] values = null;
+//            while ((values = csvReader.readNext()) != null) {
+//                records.add(values[8]);
+//            }
+//
+//        } catch (IOException | CsvValidationException e) {
+//            e.printStackTrace();
+//        }
+//        return records;
+//    }
+//
+//    private void measureDownloadSpeed() {
+//
+//        handler = new Handler();
+//        task = new Runnable() {
+//            int i = 0;
+//
+//            @Override
+//            public void run() {
+//                Log.d("MEASURE", "Doing task download" + i);
+//
+//                if (i < sm.getDownloadArray().length) {
+//
+//                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadArray()[i], 2);
+//                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+//
+//                    i++;
+//                    handler.postDelayed(this, MEASURING_DELAY);
+//
+//                    //animation
+//                    cWave.attachSpeed(instSpeed.first);
+//                    cWave.invalidate();
+//
+//                    // if finish counting
+//                } else {
+//                    handler.removeCallbacks(this);
+//
+//                    mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageDownloadSpeed()));
+//
+//                    // delay between two tasks: download and upload
+//                    handler = new Handler();
+//                    handler.postDelayed(() -> {
+//
+//                        cWave.attachColor(getColor(R.color.gold));
+//                        measureUploadSpeed();
+//
+//                    }, TASK_DELAY);
+//                }
+//            }
+//        };
+//        handler.post(task);
+//    }
+//
+//    private void measureUploadSpeed() {
+//
+//
+//        handler = new Handler();
+//        task = new Runnable() {
+//            int i = 0;
+//
+//            @Override
+//            public void run() {
+//                Log.d("MEASURE", "Doing task upload" + i);
+//
+//                if (i < sm.getUploadArray().length) {
+//
+//                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadArray()[i], 2);
+//                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
+//
+//                    i++;
+//                    handler.postDelayed(this, MEASURING_DELAY);
+//
+//                    //animation
+//                    cWave.attachSpeed(instSpeed.first);
+//                    cWave.invalidate();
+//
+//                } else {
+//                    handler.removeCallbacks(this);
+//
+//                    mSubResults.setUploadSpeed(getSpeedString(sm.getAverageUploadSpeed()));
+//                    actionBtn.setPlay();
+//
+//                    String downloadSpeed = mSubResults.getDownloadSpeed();
+//                    String uploadSpeed = mSubResults.getUploadSpeed();
+//                    String ping = mCard.getPing();
+//                    onResultUI(downloadSpeed, uploadSpeed, ping);
+//                }
+//            }
+//        };
+//        handler.post(task);
+//    }
+//
+//    private void stopMeasuring() {
+//        Log.d("MEASURE", "stopSpeed: mock stopping");
+//
+//        actionBtn.setPlay();
+//        mSubResults.setEmpty();
+//
+//        handler.removeCallbacks(task);
+//    }
 
     private String getSpeedString(Pair<Integer, Integer> speed) {
-        return String.format("%d.%d", speed.first, speed.second);
+        return String.format(Locale.ENGLISH, "%d.%d", speed.first, speed.second);
     }
 
     private void onResultUI(String downloadSpeed, String uploadSpeed, String ping) {
