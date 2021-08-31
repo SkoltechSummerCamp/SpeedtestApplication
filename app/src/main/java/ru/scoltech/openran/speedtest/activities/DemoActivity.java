@@ -65,13 +65,8 @@ public class DemoActivity extends AppCompatActivity {
     private ConstraintLayout settings;
 
     private SpeedManager sm;
-
-//    private Handler handler;
-//    private Runnable task;
-
     private DownloadUploadSpeedTestManager speedTestManager;
 
-    //    private final static int MEASURING_DELAY = 200;
     private final static int TASK_DELAY = 2500;
 
     @Override
@@ -253,110 +248,6 @@ public class DemoActivity extends AppCompatActivity {
         }
     }
 
-
-//    private List<String> readSpeedFromAssetsCSV(String filename) {
-//        List<String> records = new ArrayList<String>();
-//        try (CSVReader csvReader = new CSVReader(new InputStreamReader(getAssets().open(filename)));) {
-//            String[] values = null;
-//            while ((values = csvReader.readNext()) != null) {
-//                records.add(values[8]);
-//            }
-//
-//        } catch (IOException | CsvValidationException e) {
-//            e.printStackTrace();
-//        }
-//        return records;
-//    }
-//
-//    private void measureDownloadSpeed() {
-//
-//        handler = new Handler();
-//        task = new Runnable() {
-//            int i = 0;
-//
-//            @Override
-//            public void run() {
-//                Log.d("MEASURE", "Doing task download" + i);
-//
-//                if (i < sm.getDownloadArray().length) {
-//
-//                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getDownloadArray()[i], 2);
-//                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
-//
-//                    i++;
-//                    handler.postDelayed(this, MEASURING_DELAY);
-//
-//                    //animation
-//                    cWave.attachSpeed(instSpeed.first);
-//                    cWave.invalidate();
-//
-//                    // if finish counting
-//                } else {
-//                    handler.removeCallbacks(this);
-//
-//                    mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageDownloadSpeed()));
-//
-//                    // delay between two tasks: download and upload
-//                    handler = new Handler();
-//                    handler.postDelayed(() -> {
-//
-//                        cWave.attachColor(getColor(R.color.gold));
-//                        measureUploadSpeed();
-//
-//                    }, TASK_DELAY);
-//                }
-//            }
-//        };
-//        handler.post(task);
-//    }
-//
-//    private void measureUploadSpeed() {
-//
-//
-//        handler = new Handler();
-//        task = new Runnable() {
-//            int i = 0;
-//
-//            @Override
-//            public void run() {
-//                Log.d("MEASURE", "Doing task upload" + i);
-//
-//                if (i < sm.getUploadArray().length) {
-//
-//                    Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(sm.getUploadArray()[i], 2);
-//                    mCard.setInstantSpeed(instSpeed.first, instSpeed.second);
-//
-//                    i++;
-//                    handler.postDelayed(this, MEASURING_DELAY);
-//
-//                    //animation
-//                    cWave.attachSpeed(instSpeed.first);
-//                    cWave.invalidate();
-//
-//                } else {
-//                    handler.removeCallbacks(this);
-//
-//                    mSubResults.setUploadSpeed(getSpeedString(sm.getAverageUploadSpeed()));
-//                    actionBtn.setPlay();
-//
-//                    String downloadSpeed = mSubResults.getDownloadSpeed();
-//                    String uploadSpeed = mSubResults.getUploadSpeed();
-//                    String ping = mCard.getPing();
-//                    onResultUI(downloadSpeed, uploadSpeed, ping);
-//                }
-//            }
-//        };
-//        handler.post(task);
-//    }
-//
-//    private void stopMeasuring() {
-//        Log.d("MEASURE", "stopSpeed: mock stopping");
-//
-//        actionBtn.setPlay();
-//        mSubResults.setEmpty();
-//
-//        handler.removeCallbacks(task);
-//    }
 
     private String getSpeedString(Pair<Integer, Integer> speed) {
         return String.format(Locale.ENGLISH, "%d.%d", speed.first, speed.second);
