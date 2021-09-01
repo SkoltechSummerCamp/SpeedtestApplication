@@ -64,17 +64,18 @@ public class DemoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // begin block for hand mode switcher
         int currentNightMode = getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK;
 
-        Map<Integer, String> map = MapsKt.mapOf(
+        Map<Integer, String> themeLogMessage = MapsKt.mapOf(
                 new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_NO, "onCreate: Light Theme"),
                 new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_YES, "onCreate: Dark Theme"),
                 new kotlin.Pair<>(Configuration.UI_MODE_NIGHT_UNDEFINED, "onCreate: Undefined Theme")
         );
 
-        Log.d(TAG, map.get(currentNightMode));
-
+        Log.d(TAG, themeLogMessage.get(currentNightMode));
+        // end block
 
         super.onCreate(savedInstanceState);
 
