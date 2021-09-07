@@ -10,7 +10,7 @@ data class DelayTask<T>(private val delayMillis: Long) : Task<T, T> {
         argument: T,
         killer: TaskKiller
     ): Promise<(T) -> Unit, (String, Exception?) -> Unit> = Promise { onSuccess, onError ->
-        val delayCoroutine =  CoroutineScope(Dispatchers.Default).launch {
+        val delayCoroutine = CoroutineScope(Dispatchers.Default).launch {
             try {
                 delay(delayMillis)
                 onSuccess?.invoke(argument)
