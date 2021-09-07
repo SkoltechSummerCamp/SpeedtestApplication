@@ -5,7 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.scoltech.openran.speedtest.util.Promise
 import ru.scoltech.openran.speedtest.util.TaskKiller
-import java.util.concurrent.atomic.AtomicReference
 
 class TaskChainBuilder<S : Any?> {
     private var tasks = mutableListOf<Task<out Any?, out Any?>>()
@@ -48,9 +47,10 @@ class TaskChainBuilder<S : Any?> {
             startTask: Task<T, A>,
             buildBlock: TaskConsumer<A>.() -> TaskConsumer<R>,
         ): TaskConsumer.FinallyTaskConsumer<A, R> {
+            tasks.add(startTask)
             return object : TaskConsumer.FinallyTaskConsumer<A, R> {
                 override fun andThenFinally(task: (A) -> Unit): TaskConsumer<R> {
-                    tasks.add(TryTask(startTask, buildBlock, task))
+                    tasks.add(TryTask(buildBlock, task))
                     return TasksCollector(tasks)
                 }
             }
@@ -70,24 +70,24 @@ class TaskChainBuilder<S : Any?> {
         }
     }
 
-    private class TryTask<T : Any?, A : Any?, R : Any?>(
-        private val startTask: Task<T, A>,
-        buildBlock: TaskConsumer<A>.() -> TaskConsumer<R>,
-        private val finallyTask: (A) -> Unit,
+    private class TryTask<T : Any?, R : Any?>(
+        buildBlock: TaskConsumer<T>.() -> TaskConsumer<R>,
+        private val finallyTask: (T) -> Unit,
     ) : Task<T, R> {
-        private val tasks: List<Task<out Any?, out Any?>>
+        private val tasks: List<Task<Any?, Any?>>
 
         init {
             val mutableTasks = mutableListOf<Task<*, *>>()
             buildBlock(TasksCollector(mutableTasks))
-            tasks = mutableTasks
+            @Suppress("UNCHECKED_CAST")
+            tasks = mutableTasks as MutableList<Task<Any?, Any?>>
         }
 
         private fun ((String, Exception?) -> Unit)?.withEndTask(
-            finallyArgument: AtomicReference<A>
+            finallyArgument: T
         ): ((String, Exception?) -> Unit) {
             return { message, exception ->
-                finallyTask(finallyArgument.get())
+                finallyTask(finallyArgument)
                 this?.invoke(message, exception)
             }
         }
@@ -96,36 +96,20 @@ class TaskChainBuilder<S : Any?> {
             argument: T,
             killer: TaskKiller,
         ): Promise<(R) -> Unit, (String, Exception?) -> Unit> = Promise { onSuccess, onError ->
-            val finallyArgument = AtomicReference<A>()
-            val onSuccessTask = UnstoppableTask<R, Unit> {
-                finallyTask(finallyArgument.get())
-                onSuccess?.invoke(it)
-            }
-
             @Suppress("UNCHECKED_CAST")
-            val tryChain = TaskChain<A>(
-                (tasks + listOf(onSuccessTask)) as List<Task<Any?, Any?>>,
-                { onError.withEndTask(finallyArgument).invoke("Stopped", null) },
-                onError.withEndTask(finallyArgument)
+            val onSuccessTask = UnstoppableTask<R, Unit> {
+                finallyTask(argument)
+                onSuccess?.invoke(it)
+            } as Task<Any?, Any?>
+
+            val tryChain = TaskChain<T>(
+                tasks + listOf(onSuccessTask),
+                { onError.withEndTask(argument).invoke("Stopped", null) },
+                onError.withEndTask(argument)
             )
-            val startTaskKiller = TaskKiller()
 
-            killer.register {
-                startTaskKiller.kill()
-                tryChain.stop()
-            }
-
-            try {
-                startTask.prepare(argument, startTaskKiller)
-                    .onSuccess {
-                        finallyArgument.set(it)
-                        tryChain.start(it)
-                    }
-                    .onError(onError ?: { _, _ -> })
-                    .start()
-            } catch (e: FatalException) {
-                onError?.invoke(e.message!!, e.cause as? Exception)
-            }
+            killer.register { tryChain.stop() }
+            tryChain.start(argument)
         }
     }
 }
