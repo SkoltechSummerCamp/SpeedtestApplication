@@ -6,6 +6,7 @@ import ru.scoltech.openran.speedtest.parser.MultithreadedIperfOutputParser
 import ru.scoltech.openran.speedtest.task.TaskChain
 import ru.scoltech.openran.speedtest.task.TaskChainBuilder
 import ru.scoltech.openran.speedtest.task.impl.*
+import ru.scoltech.openran.speedtest.util.SkipThenAverageEqualizer
 import java.lang.Exception
 import java.lang.Runnable
 import java.net.InetSocketAddress
@@ -63,6 +64,7 @@ private constructor(
             context.filesDir.absolutePath,
             "$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_DOWNLOAD_CLIENT_ARGS",
             MultithreadedIperfOutputParser(),
+            SkipThenAverageEqualizer(1, 4),
             balancerApiBuilder.connectTimeout.toLong(),
             onDownloadStart,
             onDownloadSpeedUpdate,
@@ -119,6 +121,7 @@ private constructor(
                     context.filesDir.absolutePath,
                     "$DEFAULT_COMMON_CLIENT_ARGS $DEFAULT_DOWNLOAD_CLIENT_ARGS",
                     MultithreadedIperfOutputParser(),
+                    SkipThenAverageEqualizer(0, 4),
                     DEFAULT_TIMEOUT.toLong(),
                     onDownloadStart,
                     onDownloadSpeedUpdate,
