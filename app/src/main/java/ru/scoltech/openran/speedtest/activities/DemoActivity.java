@@ -203,6 +203,8 @@ public class DemoActivity extends AppCompatActivity {
                     mSubResults.setEmpty();
                 }))
                 .onFatalError((s, exception) -> runOnUiThread(() -> {
+                    Log.e("SpeedtestFatal", s, exception);
+
                     onStopUI();
                     actionBtn.setPlay();
                     mSubResults.setEmpty();
