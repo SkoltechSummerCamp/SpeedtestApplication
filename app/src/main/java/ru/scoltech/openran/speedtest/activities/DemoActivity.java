@@ -266,6 +266,7 @@ public class DemoActivity extends AppCompatActivity {
         mResults.setDownloadSpeed(downloadSpeed);
         mResults.setUploadSpeed(uploadSpeed);
         mResults.setPing(ping);
+        mHeader.setSectionName("Results");
 
         actionBtn.setRestart();
 
@@ -289,7 +290,7 @@ public class DemoActivity extends AppCompatActivity {
         mSubResults.setEmpty();
         mResults.setVisibility(View.GONE);
 
-        mHeader.setSectionName("Demonstration");
+        mHeader.setSectionName("Measuring");
         mHeader.disableButtonGroup();
         mHeader.hideReturnBtn();
 
