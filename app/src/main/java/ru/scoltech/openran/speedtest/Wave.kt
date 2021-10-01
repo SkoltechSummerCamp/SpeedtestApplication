@@ -2,6 +2,7 @@ package ru.scoltech.openran.speedtest
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
@@ -12,17 +13,25 @@ import kotlin.math.*
 import kotlin.random.Random
 
 class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
-    private var mPaint = Paint()
-    private var mCurrentSpeed = 0
+    private val paint = Paint()
+    private var currentSpeed = 0
     private var redrawJob: Job? = null
 
-    private val backgroundHarmonics = HarmonicSum()
-    private val foregroundHarmonics = HarmonicSum()
+    private val rotationMatrix: Matrix by lazy {
+        Matrix().apply {
+            setRotate(180f, width.toFloat() / 2, height.toFloat() / 2)
+        }
+    }
+
+    private val topBackgroundHarmonics = HarmonicSum()
+    private val bottomBackgroundHarmonics = HarmonicSum()
+    private val topForegroundHarmonics = HarmonicSum()
+    private val bottomForegroundHarmonics = HarmonicSum()
 
     init {
-        mPaint.strokeWidth = 1f
-        mPaint.isAntiAlias = true
-        mPaint.style = Paint.Style.FILL
+        paint.strokeWidth = 1f
+        paint.isAntiAlias = true
+        paint.style = Paint.Style.FILL
     }
 
     fun start() {
@@ -44,47 +53,53 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         }
     }
 
-    private inline fun buildFunctionPath(f: (Float) -> Float): Path {
-        val path = Path()
-        path.moveTo(width.toFloat(), height.toFloat())
-        path.lineTo(0f, height.toFloat())
-        (0..width)
-            .map { it to f(MAX_X * it.toFloat() / width) }
-            .forEach { (x, y) -> path.lineTo(x.toFloat(), y) }
-        path.close()
+    private inline fun buildFunctionPath(path: Path = Path(), f: (Float) -> Float): Path {
+        val points = (0..width).map { it.toFloat() to f(MAX_X * it.toFloat() / width) }
+
+        if (path.isEmpty) {
+            path.moveTo(points[0].first, points[0].second)
+        }
+        points.subList(1, points.size)
+            .forEach { (x, y) -> path.lineTo(x, y) }
         return path
     }
 
-    public override fun onDraw(canvas: Canvas) {
-        mPaint.alpha = BACKGROUND_ALPHA
-        backgroundHarmonics.update()
-        canvas.drawPath(buildFunctionPath(backgroundHarmonics), mPaint)
-
-        mPaint.alpha = FOREGROUND_ALPHA
-        foregroundHarmonics.update()
-        canvas.drawPath(buildFunctionPath(foregroundHarmonics), mPaint)
+    private fun drawHarmonics(canvas: Canvas, alpha: Int, top: HarmonicSum, bottom: HarmonicSum) {
+        paint.alpha = alpha
+        top.update()
+        bottom.update()
+        val path = buildFunctionPath(f = top)
+        path.transform(rotationMatrix)
+        canvas.drawPath(buildFunctionPath(path, bottom), paint)
     }
 
-    fun attachSpeed(speed: Int) { // attach current instant speed to wave
-        mCurrentSpeed = speed
+    public override fun onDraw(canvas: Canvas) {
+        drawHarmonics(canvas, BACKGROUND_ALPHA, topBackgroundHarmonics, bottomBackgroundHarmonics)
+        drawHarmonics(canvas, FOREGROUND_ALPHA, topForegroundHarmonics, bottomForegroundHarmonics)
+    }
+
+    fun attachSpeed(speed: Int) {
+        currentSpeed = speed
     }
 
     fun attachColor(color: Int) {
-        mPaint.color = color
+        paint.color = color
     }
 
-    private data class Harmonic(
+    private class Harmonic(
         val amplitude: Float,
         var frequency: Float,
         var initialPhase: Float,
         var amplitudeCyclicScale: Float = 0f,
     ): (Float) -> Float {
         val amplitudeScale: Float
-            get() = abs(amplitudeCyclicScale % MAX_CYCLIC_SCALE - MAX_CYCLIC_SCALE / 2)
-                .minus(MAX_CYCLIC_SCALE / 4)
+            get() = amplitudeCyclicScale.mod(MAX_AMPLITUDE_SCALE * 4)
+                .minus(MAX_AMPLITUDE_SCALE * 2)
+                .absoluteValue
+                .minus(MAX_AMPLITUDE_SCALE)
 
         override fun invoke(p1: Float): Float {
-            return amplitudeScale * amplitude * sin(frequency * p1 + initialPhase) + amplitude
+            return amplitudeScale * amplitude * sin(frequency * p1 + initialPhase)
         }
     }
 
@@ -94,12 +109,14 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
                 MAX_AMPLITUDE,
                 frequency,
                 Random.nextFloat() * MAX_STARTING_INITIAL_PHASE,
-                Random.nextFloat() * MAX_CYCLIC_SCALE
+                Random.nextFloat() * MAX_AMPLITUDE_SCALE * 4
             )
         }
 
         override fun invoke(p1: Float): Float {
-            return harmonics.sumOf { it(p1).toDouble() }.toFloat()
+            return harmonics.sumOf {
+                it(p1).toDouble() + it.amplitude * OFFSET_AMPLITUDE_SCALE
+            }.toFloat()
         }
 
         fun update() {
@@ -122,7 +139,7 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         private const val MAX_AMPLITUDE = 13f
         private val FREQUENCIES = List(8) { 1 - it.toFloat() / 10 }
         private const val MAX_STARTING_INITIAL_PHASE = 5f
-        private const val MAX_CYCLIC_SCALE = 4f
+        private const val MAX_AMPLITUDE_SCALE = 1f
         private const val MUTATION_AMPLITUDE_SCALE_THRESHOLD = 0.05f
         private const val AMPLITUDE_CYCLIC_SCALE_STEP = 0.1f
         private const val MAX_INITIAL_PHASE_STEP = 0.4f
@@ -130,5 +147,6 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         private const val MAX_X = 25f
         private const val BACKGROUND_ALPHA = 128
         private const val FOREGROUND_ALPHA = 255
+        private const val OFFSET_AMPLITUDE_SCALE = 0.5f
     }
 }
