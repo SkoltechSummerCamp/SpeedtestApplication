@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     private val paint = Paint()
-    private var currentSpeed = 0
+    private var normalizedSpeed = 0f
     private var redrawJob: Job? = null
 
     private val rotationMatrix: Matrix by lazy {
@@ -59,15 +59,14 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         if (path.isEmpty) {
             path.moveTo(points[0].first, points[0].second)
         }
-        points.subList(1, points.size)
-            .forEach { (x, y) -> path.lineTo(x, y) }
+        points.forEach { (x, y) -> path.lineTo(x, y) }
         return path
     }
 
     private fun drawHarmonics(canvas: Canvas, alpha: Int, top: HarmonicSum, bottom: HarmonicSum) {
         paint.alpha = alpha
-        top.update()
-        bottom.update()
+        top.update(normalizedSpeed)
+        bottom.update(normalizedSpeed)
         val path = buildFunctionPath(f = top)
         path.transform(rotationMatrix)
         canvas.drawPath(buildFunctionPath(path, bottom), paint)
@@ -79,7 +78,7 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     fun attachSpeed(speed: Int) {
-        currentSpeed = speed
+        normalizedSpeed = log2(speed.toFloat() + 1) * NORMALIZED_SPEED_SCALE
     }
 
     fun attachColor(color: Int) {
@@ -119,34 +118,38 @@ class Wave(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
             }.toFloat()
         }
 
-        fun update() {
+        fun update(normalizedSpeed: Float) {
             harmonics.forEachIndexed { index, harmonic ->
                 harmonic.amplitudeCyclicScale += AMPLITUDE_CYCLIC_SCALE_STEP
-                if (abs(harmonic.amplitudeCyclicScale) < MUTATION_AMPLITUDE_SCALE_THRESHOLD) {
+                    .times(normalizedSpeed + AMPLITUDE_CYCLIC_SCALE_STEP_MIN_SCALE)
+                if (abs(harmonic.amplitudeScale) < MUTATION_AMPLITUDE_SCALE_THRESHOLD) {
                     harmonic.initialPhase += Random.nextFloat()
                         .times(MAX_INITIAL_PHASE_STEP)
                         .times(if (index % 2 == 0) -1 else 1)
                     harmonic.frequency = FREQUENCIES[index]
                         .plus(Random.nextFloat() * FREQUENCY_SEGMENT_LENGTH)
                         .minus(FREQUENCY_SEGMENT_LENGTH / 2)
+                        .times(normalizedSpeed)
                 }
             }
         }
     }
 
     companion object {
-        private const val FPS = 60L
+        private const val FPS = 30L
         private const val MAX_AMPLITUDE = 13f
         private val FREQUENCIES = List(8) { 1 - it.toFloat() / 10 }
         private const val MAX_STARTING_INITIAL_PHASE = 5f
         private const val MAX_AMPLITUDE_SCALE = 1f
-        private const val MUTATION_AMPLITUDE_SCALE_THRESHOLD = 0.05f
-        private const val AMPLITUDE_CYCLIC_SCALE_STEP = 0.1f
+        private const val MUTATION_AMPLITUDE_SCALE_THRESHOLD = 0.08f
+        private const val AMPLITUDE_CYCLIC_SCALE_STEP = 0.05f
         private const val MAX_INITIAL_PHASE_STEP = 0.4f
         private const val FREQUENCY_SEGMENT_LENGTH = 0.08f
         private const val MAX_X = 25f
         private const val BACKGROUND_ALPHA = 128
         private const val FOREGROUND_ALPHA = 255
         private const val OFFSET_AMPLITUDE_SCALE = 0.5f
+        private const val NORMALIZED_SPEED_SCALE = 0.2f
+        private const val AMPLITUDE_CYCLIC_SCALE_STEP_MIN_SCALE = 1f
     }
 }
