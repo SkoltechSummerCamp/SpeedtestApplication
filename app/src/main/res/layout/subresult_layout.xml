@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <!--    Download col-->
+    <LinearLayout
+        android:id="@+id/block_download"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/label_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/download"
+            android:textAppearance="@style/Headline3"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <TextView
+            android:id="@+id/value_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/empty"
+            android:textAppearance="@style/Headline4"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <TextView
+            android:id="@+id/caption_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/mbps"
+            android:textAppearance="@style/Subtitle1"
+            android:textColor="?android:attr/textColorPrimary" />
+    </LinearLayout>
+
+    <!--    Upload col-->
+    <LinearLayout
+        android:id="@+id/block_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/label_upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/upload"
+            android:textAppearance="@style/Headline3"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <TextView
+            android:id="@+id/value_upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/empty"
+            android:textAppearance="@style/Headline4"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <TextView
+            android:id="@+id/caption_upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/mbps"
+            android:textAppearance="@style/Subtitle1"
+            android:textColor="?android:attr/textColorPrimary" />
+    </LinearLayout>
+
+
+</LinearLayout>

@@ -1,0 +1,58 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="DarkTheme" parent="Theme.AppCompat.DayNight">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="Headline1">
+        <item name="android:textSize">64sp</item>
+        <item name="android:fontFamily">@font/futura_pt_medium</item>
+    </style>
+
+    <style name="Headline2">
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:fontFamily">@font/futura_pt_demi</item>
+    </style>
+
+    <style name="Headline3">
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:fontFamily">@font/futura_pt_medium</item>
+    </style>
+
+    <style name="Headline4">
+        <item name="android:textSize">24sp</item>
+        <item name="android:fontFamily">@font/futura_pt_medium</item>
+    </style>
+
+    <style name="Subtitle1">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/futura_pt_medium</item>
+    </style>
+
+    <style name="Subtitle2">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/arial_bold</item>
+    </style>
+
+    <style name="Subtitle3">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/arial_regular</item>
+    </style>
+
+    <style name="Mono">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/oxygen_mono_regular</item>
+    </style>
+
+</resources>

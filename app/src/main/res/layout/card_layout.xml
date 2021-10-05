@@ -1,0 +1,121 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:background="@drawable/card_background"
+    android:orientation="vertical">
+
+    <!--    Speed info-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/speed_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/integer_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:gravity="top"
+            android:lineSpacingExtra="0sp"
+            android:text="@string/_0"
+            android:textAppearance="@style/Headline1"
+            android:textColor="@color/neutral_10"
+
+            app:layout_constraintRight_toLeftOf="@+id/dot_speed"
+            tools:ignore="MissingConstraints" />
+
+        <TextView
+            android:id="@+id/dot_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+
+            android:lineSpacingExtra="0sp"
+            android:text="@string/dot"
+            android:textAppearance="@style/Headline1"
+            android:textColor="@color/colorLightBackground"
+
+            app:layout_constraintLeft_toLeftOf="@+id/speed_info"
+            app:layout_constraintRight_toRightOf="@+id/speed_info"
+            tools:ignore="MissingConstraints" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toRightOf="@+id/dot_speed"
+            tools:ignore="MissingConstraints">
+
+            <TextView
+                android:id="@+id/fraction_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:gravity="top"
+                android:lineSpacingExtra="0sp"
+                android:text="@string/_0"
+                android:textAppearance="@style/Headline1"
+                android:textColor="@color/colorLightBackground" />
+
+            <TextView
+                android:id="@+id/caption_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_marginTop="-10dp"
+
+                android:text="@string/mbps"
+                android:textAppearance="@style/Headline2"
+                android:textColor="@color/colorLightBackground"
+                app:layout_constraintTop_toBottomOf="@+id/fraction_speed" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ru.scoltech.openran.speedtest.Wave
+        android:id="@+id/progress_wave"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="20dp" />
+
+    <!--    Ping info-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/label_ping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginEnd="40dp"
+
+            android:text="@string/ping"
+            android:textAppearance="@style/Headline4"
+            android:textColor="@color/colorLightBackground" />
+
+        <TextView
+
+            android:id="@+id/value_ping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginEnd="40dp"
+
+            android:text="@string/empty"
+            android:textAppearance="@style/Headline4"
+            android:textColor="@color/colorLightBackground" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

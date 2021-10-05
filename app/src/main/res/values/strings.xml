@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">5Gst</string>
+    <string name="startIperf">start</string>
+    <string name="stopIperf">stop</string>
+    <string name="deviceIp">Device ip :</string>
+    <string name="refreshIp">refresh</string>
+    <string name="hideIp">hide</string>
+    <string name="iPerf">iPerf</string>
+    <string name="pingTesting">TESTING…</string>
+    <string name="udpPing">UDP PING</string>
+    <string name="bigStop">STOP</string>
+    <string name="pingLabel">Ping:</string>
+    <string name="noneVal">---</string>
+    <string name="ipLabel">ip:</string>>
+    <string name="performAsCommand">PERFORM AS COMMAND</string>
+    <string name="icmpPing">ICMP PING</string>
+    <string name="pingByICMPLabel">ping by ICMP:</string>
+    <string name="startUdpPingServer">start udp ping server</string>
+    <string name="simple_ping">Simple ping:</string>
+    <string name="device_information">Device information:</string>
+    <string name="iperf_mobile">iperf mobile args:</string>
+    <string name="iperfServer">iperf server args:</string>
+    <string name="server_ip">server ip:</string>
+    <string name="thisIsServer">this is server</string>
+    <string-array name="commands">
+        <item>iPerf</item>
+        <item>Ping</item>>
+    </string-array>
+    <string name="mbps">Mbps</string>
+    <string name="ping">ping</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="ms">ms</string>
+    <string name="section_name">Section name</string>
+    <string name="add_widget">Add widget</string>
+    <string name="tap_to_start_session">Tap to start session</string>
+    <string name="empty">_____</string>
+    <string name="start">start</string>
+    <string name="download_speed">Download speed </string>
+    <string name="default_main_address">5gst.ru:5555</string>
+    <string name="main_address_hint">Main address:</string>
+    <string name="balancer_mode">Balancer mode</string>
+    <string name="direct_iperf_mode">Direct iPerf mode</string>
+    <string name="_0">0</string>
+    <string name="upload_speed">Upload speed</string>
+    <string name="_ping">Ping</string>
+    <string name="dot">.</string>
+</resources>
