@@ -2,11 +2,11 @@ package ru.scoltech.openran.speedtest.activities;
 
 
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -15,11 +15,13 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import kotlin.Unit;
 import kotlin.collections.MapsKt;
@@ -155,14 +157,21 @@ public class DemoActivity extends AppCompatActivity {
             this.<RadioButton>findViewById(R.id.direct_mode).setChecked(true);
         }
 
+        if (!getPreferences(MODE_PRIVATE).getBoolean(ApplicationConstants.PRIVACY_SHOWN, false)) {
+            SharedPreferences.Editor preferencesEditor = getPreferences(MODE_PRIVATE).edit();
+            preferencesEditor.putBoolean(ApplicationConstants.PRIVACY_SHOWN, true);
+            preferencesEditor.apply();
+            findViewById(R.id.main_layout).post(this::showPrivacyPopUp);
+        }
+
         // TODO split on methods
         speedTestManager = new DownloadUploadSpeedTestManager.Builder(this)
                 .onPingUpdate((ping) -> runOnUiThread(() -> mCard.setPing((int) ping)))
                 .onDownloadStart(() -> runOnUiThread(() -> {
                     mCard.setInstantSpeed(0, 0);
 
+                    cWave.start();
                     cWave.attachSpeed(0);
-                    cWave.invalidate();
                 }))
                 .onDownloadSpeedUpdate((statistics, speedBitsPS) -> runOnUiThread(() -> {
                     Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
@@ -170,15 +179,17 @@ public class DemoActivity extends AppCompatActivity {
 
                     //animation
                     cWave.attachSpeed(instSpeed.first);
-                    cWave.invalidate();
                 }))
-                .onDownloadFinish((statistics) -> runOnUiThread(() -> mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageSpeed(statistics)))))
+                .onDownloadFinish((statistics) -> runOnUiThread(() -> {
+                    mSubResults.setDownloadSpeed(getSpeedString(sm.getAverageSpeed(statistics)));
+                    cWave.stop();
+                }))
                 .onUploadStart(() -> runOnUiThread(() -> {
                     mCard.setInstantSpeed(0, 0);
 
+                    cWave.start();
                     cWave.attachColor(getColor(R.color.gold));
                     cWave.attachSpeed(0);
-                    cWave.invalidate();
                 }))
                 .onUploadSpeedUpdate((statistics, speedBitsPS) -> runOnUiThread(() -> {
                     Pair<Integer, Integer> instSpeed = sm.getSpeedWithPrecision(speedBitsPS.intValue(), 2);
@@ -186,9 +197,11 @@ public class DemoActivity extends AppCompatActivity {
 
                     //animation
                     cWave.attachSpeed(instSpeed.first);
-                    cWave.invalidate();
                 }))
-                .onUploadFinish((statistics) -> runOnUiThread(() -> mSubResults.setUploadSpeed(getSpeedString(sm.getAverageSpeed(statistics)))))
+                .onUploadFinish((statistics) -> runOnUiThread(() -> {
+                    cWave.stop();
+                    mSubResults.setUploadSpeed(getSpeedString(sm.getAverageSpeed(statistics)));
+                }))
                 .onFinish(() -> runOnUiThread(() -> {
                     actionBtn.setPlay();
 
@@ -210,6 +223,18 @@ public class DemoActivity extends AppCompatActivity {
                     mSubResults.setEmpty();
                 }))
                 .build();
+    }
+
+    private void showPrivacyPopUp() {
+        AlertDialog alert = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.policy_title))
+                .setMessage(R.string.policy_content)
+                .setPositiveButton(android.R.string.ok, null)
+                .create();
+        alert.show();
+
+        ((TextView) Objects.requireNonNull(alert.findViewById(android.R.id.message)))
+                .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     public void onClick(View v) {
@@ -256,6 +281,7 @@ public class DemoActivity extends AppCompatActivity {
         mResults.setDownloadSpeed(downloadSpeed);
         mResults.setUploadSpeed(uploadSpeed);
         mResults.setPing(ping);
+        mHeader.setSectionName("Results");
 
         actionBtn.setRestart();
 
@@ -273,13 +299,12 @@ public class DemoActivity extends AppCompatActivity {
         mCard.setDefaultCaptions();
 
         cWave.attachColor(getColor(R.color.mint));
-        cWave.invalidate();
 
         mSubResults.setVisibility(View.VISIBLE);
         mSubResults.setEmpty();
         mResults.setVisibility(View.GONE);
 
-        mHeader.setSectionName("Demonstration");
+        mHeader.setSectionName("Measuring");
         mHeader.disableButtonGroup();
         mHeader.hideReturnBtn();
 
@@ -294,6 +319,7 @@ public class DemoActivity extends AppCompatActivity {
         mHeader.enableButtonGroup();
         mHeader.showReturnBtn();
 
+        cWave.stop();
         actionBtn.setPlay();
 
         mSubResults.setEmpty();
