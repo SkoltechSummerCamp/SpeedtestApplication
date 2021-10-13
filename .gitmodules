@@ -1,6 +1,8 @@
 [submodule "iPerf"]
 	path = iPerf
 	url = https://github.com/SkoltechSummerCamp/iPerf.git
+	branch = main
 [submodule "swaggerApi"]
 	path = swaggerApi
 	url = https://github.com/SkoltechSummerCamp/Swagger.git
+	branch = main
