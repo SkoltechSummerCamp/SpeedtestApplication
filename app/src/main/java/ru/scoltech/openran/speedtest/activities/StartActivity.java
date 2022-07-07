@@ -41,9 +41,9 @@ import ru.scoltech.openran.speedtest.customViews.SubResultView;
 import ru.scoltech.openran.speedtest.manager.DownloadUploadSpeedTestManager;
 
 
-public class DemoActivity extends AppCompatActivity {
+public class StartActivity extends AppCompatActivity {
 
-    private String TAG = "DEMO_ACTIVITY";
+    private String TAG = "START_ACTIVITY";
     private Wave cWave;
     private CardView mCard;
     private SubResultView mSubResults; // in progress result
@@ -85,7 +85,7 @@ public class DemoActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
-        setContentView(R.layout.activity_demo);
+        setContentView(R.layout.activity_start);
 
         init();
 
